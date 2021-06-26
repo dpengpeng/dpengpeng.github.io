@@ -44,3 +44,27 @@ $ hexo deploy or hexo d
 ```
 
 More info: [Deployment](https://hexo.io/docs/one-command-deployment.html)
+
+### 添加分类和标签
+```xml
+categories: 分类名
+tags:
+- tag1
+- tag2
+```
+### 部署打包方式
+```xml
+hexo clean && hexo g && hexo d
+```
+### 博客的同步与发布
+```xml
+github分支存在两个：
+* 默认分支为hexo,用于使用git管理内容
+* main分支为发布分支
+```
+
+### 分割符
+```xml
+<!-- more -->
+用于文章内容分割，more下面的内容默认不显示，通过点击阅读全文显示
+```

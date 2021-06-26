@@ -3,9 +3,9 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Hexo
-subtitle: ''
-description: ''
+title: ENOUGH
+subtitle: too young too simple，sometimes naive
+description: 自强不息 厚德载物
 keywords:
 author: realDing
 language: en
@@ -96,6 +96,11 @@ ignore:
 
 # Extensions
 ## Plugins: https://hexo.io/plugins/
+search:
+  path: search.xml
+  field: post
+  format: html
+  limit: 10000
 ## Themes: https://hexo.io/themes/
 theme: next
 
