@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css" integrity="sha256-2H3fkXt6FEmrReK448mDVGKb3WW2ZZw35gI7vqHOE4Y=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;dpengpeng.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Gemini&quot;,&quot;version&quot;:&quot;8.5.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;fadeInDown&quot;,&quot;post_body&quot;:&quot;fadeInDown&quot;,&quot;coll_header&quot;:&quot;fadeInLeft&quot;,&quot;sidebar&quot;:&quot;fadeInUp&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;Searching...&quot;,&quot;empty&quot;:&quot;We didn&#39;t find any results for the search: ${query}&quot;,&quot;hits_time&quot;:&quot;${hits} results found in ${time} ms&quot;,&quot;hits&quot;:&quot;${hits} results found&quot;},&quot;path&quot;:&quot;&#x2F;search.xml&quot;,&quot;localsearch&quot;:{&quot;enable&quot;:true,&quot;trigger&quot;:&quot;auto&quot;,&quot;top_n_per_article&quot;:1,&quot;unescape&quot;:false,&quot;preload&quot;:false}}</script><script src="/js/config.js"></script>
+<meta name="description" content="select * for udpate   for udpate应用的是悲观锁，根据select的数据集范围会对不同量级的数据进行加锁，良好情况下，比如通过主键、索引定位到行，则进行行加锁，较差情况下，可能进行表锁，使用时需要针对不同的sql进行分析，判定加锁的范围。在高并发下，可能对性能有影响。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mysql相关">
+<meta property="og:url" content="https://dpengpeng.github.io/2021/07/02/mysql%E7%9B%B8%E5%85%B3/index.html">
+<meta property="og:site_name" content="ENOUGH">
+<meta property="og:description" content="select * for udpate   for udpate应用的是悲观锁，根据select的数据集范围会对不同量级的数据进行加锁，良好情况下，比如通过主键、索引定位到行，则进行行加锁，较差情况下，可能进行表锁，使用时需要针对不同的sql进行分析，判定加锁的范围。在高并发下，可能对性能有影响。">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-07-02T14:26:54.000Z">
+<meta property="article:modified_time" content="2021-07-05T15:33:52.012Z">
+<meta property="article:author" content="realDing">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://dpengpeng.github.io/2021/07/02/mysql%E7%9B%B8%E5%85%B3/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:true,&quot;lang&quot;:&quot;en&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;dpengpeng.github.io&#x2F;2021&#x2F;07&#x2F;02&#x2F;mysql%E7%9B%B8%E5%85%B3&#x2F;&quot;,&quot;path&quot;:&quot;2021&#x2F;07&#x2F;02&#x2F;mysql相关&#x2F;&quot;,&quot;title&quot;:&quot;mysql相关&quot;}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
+<title>mysql相关 | ENOUGH</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">ENOUGH</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">i hear and i forget.i see and i remember.i do and i understand.</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a></li>
+        <li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="Searching..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="realDing"
+      src="/images/header.jpg">
+  <p class="site-author-name" itemprop="name">realDing</p>
+  <div class="site-description" itemprop="description">自强不息 厚德载物</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/dpengpeng" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;dpengpeng" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://dpengpeng.github.io/2021/07/02/mysql%E7%9B%B8%E5%85%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/header.jpg">
+      <meta itemprop="name" content="realDing">
+      <meta itemprop="description" content="自强不息 厚德载物">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ENOUGH">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          mysql相关
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-02 22:26:54" itemprop="dateCreated datePublished" datetime="2021-07-02T22:26:54+08:00">2021-07-02</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2021-07-05 23:33:52" itemprop="dateModified" datetime="2021-07-05T23:33:52+08:00">2021-07-05</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <ol>
+<li>select * for udpate</li>
+</ol>
+<ul>
+<li>for udpate应用的是悲观锁，根据select的数据集范围会对不同量级的数据进行加锁，<br>良好情况下，比如通过主键、索引定位到行，则进行行加锁，<br>较差情况下，可能进行表锁，使用时需要针对不同的sql进行分析，判定加锁的范围。<br>在高并发下，可能对性能有影响。</li>
+</ul>
+<span id="more"></span>
+<ol start="2">
+<li>笛卡尔积</li>
+</ol>
+<ul>
+<li>mysql中的inner join,left join,right join都会涉及到笛卡尔积相关概念，真实作用后的结果一般为局部笛卡尔积。<br>当多个表进行连接时，推荐使用on进行连接，这样可以避免两张表进行全量的笛卡尔积(两张表每个都会进行匹配一行结果)，<br>on作用会先根据on的条件关联出符合的两行再组成一个完整的行数据，如果使用where进行关联，则两个表会先进行全量的笛卡尔积，<br>然后再根据where条件把符合条件的数据筛选出来。当两张表的数据很大时，on和where的效率会很明显。</li>
+</ul>
+<ol start="3">
+<li>select 语句执行过程</li>
+</ol>
+<ul>
+<li>首先通过连接器进行会话连接(加入session还没有创建,如果创建了就没有这一步)，然后进入分析器进行语法分析，然后进入优化器进行语法优化，最后进入执行器进行sql执行,如何内存中有缓存可能直接在内存中就能找到数据，如果禁用了缓存，则每次从磁盘中查找数据到内存，再返回给客户端.</li>
+</ul>
+<ol start="4">
+<li>update 语句执行过程</li>
+</ol>
+<ul>
+<li>连接器-&gt;分析器-&gt;优化器-&gt;执行器,和select不同的是执行器里面逻辑不同，首先从内存中查找数据(此数据所在的数据页在内存中)，如果有直接取出对应的行数据进行更新，如果没有,并且走的是主键索引，则从磁盘捞出对应的数据放入内存，然后做相应的更新操作，更新完刷新内存中的值，同时写入redo log，然后再写入binglog，提交事务，代表此次更新完成。这就能保证数据库从crash状态恢复时，不会丢数据，简称crash-safe。如果内存中没有整个数据，并且更新走的是二级索引(普通索引)，那么就会将变更放在change buffer中，同时在redo log中记录change buffer类型的日志信息，再写入binglog，提交事务。当下次有个select语句要查询刚才和放入change buffer一样记录时，就会从磁盘捞取相应的数据页到内存中，再作用change buffer中的变更，最后将更新后的数据方会给客户端，同时内存里保存最新的数据。只有走普通索引时才会使用change buffer，主键时不会使用，change buffer可以减少随机读磁盘次数，redo log可以减少随机写磁盘次数，这两个都有相应的物理日志(有相应的文件名对应)，mysql后台会有个merge线程定时的将内存中的脏页数据刷到磁盘，并不是将redo log和change buffer的日志信息输入磁盘，这两个日志是在宕机恢复时才会使用的。</li>
+<li>写redo log文件，是在更新内存之后的.</li>
+<li>redo log记录的不是具体的数据是数据页的变化，磁盘上面的数据也不是根据redo log来修改的，是把内存中的数据页的脏页刷新到磁盘数据页中</li>
+<li>redo log的文件在mysql里面通常有几个，命名格式为ib_logfile0,ib_logfile1…,个数和大小可以设置。redo log技术就是mysql中的WAL技术(write-Ahead logging),就是先写日志，在写磁盘。redo log日志放在redo log file后会在恰当的时机将数据刷到数据文件即表中。</li>
+<li>redo log 和binglog的刷盘策略可以设置，分别设置innodb_flush_log_at_trx_commit和sync_binlog两个都为1时就能提供两阶段提交功能，保证数据不丢失，即使mysql异常宕机重启。redo log是innodb引擎的log文件，binglog是mysql server自带的log文件。</li>
+<li>何时会擦除redo log并更新到数据文件中：系统空闲时、redo log file空间不足时、mysql正常关闭时。</li>
+<li>形象化的来理解数据更新操作：我们假设操作数据库相当于饭店掌柜经营生意。因为mysql的架构是mysql server 和存储引擎是分开的，所以我们假设server就是掌柜，redo log相当于临时记账的黑板，账本相当于表数据文件。通常有人来赊账或者还款时就会先将这个信息记录在黑板，等黑板记录满了或者掌柜空闲了，就会来将黑板的信息记录到账本。</li>
+</ul>
+<ol start="5">
+<li>事务隔离级别</li>
+</ol>
+<ul>
+<li>mysql中的数据读完之后是放在内存中的缓存页里的，缓存页里的是一行行的数据。</li>
+<li>mysql中的事务隔离级别分类: 读提交(read_committed)、可重复读(repeatable_read)、读未提交(read_uncommitted)、串行化(serializable),每种隔级别都有其各自的应用场景，不过我们重点关注读提交和可重复读</li>
+<li>读提交: 只能读到已经committed的数据。在一个事务中，每次执行sql时会重新创建一个一致性读视图(read view)，然后读视图里的数据，因此可以存在前后读取的数据不一样，因为数据可能被其他事务修改并提交了</li>
+<li>可重复读：只能读到已经committed的数据，并且读取数据的视图是在事务开始时创建的，其他事务提交的数据在此次事务中不可见，因此在事务中读取的数据每次都是一样的。</li>
+<li>事务隔离级别是用来解决并发读写冲突时一系列问题的手段(附属mvcc)，问题包括：脏写，脏读，幻读，不可重复读，具体来说不同的事务隔离级别对应的快照读结果不一样，不同的隔离级别解决的问题也不一样。<ul>
+<li>脏写:事务A与事务B写同一行数据，因为事务A的回滚，导致事务B的更新失效。某一行数据初始值V0,事务A修改成V1，事务B修改成V2,因为事务A回滚，导致数据变成了V0，而事务B的更新也被抹掉了。</li>
+<li>脏读：事务B因为事务A回滚，导致前后读取的数据不一致；某行数据开始是为v0,事务A修改后为V1，事务B第一次读取为V2，后来事务A回滚，事务B第二次读到V0，而不是V1.</li>
+<li>幻读：事务A因为事务B，导致事务A第二次比第一次多读取都数据。事务A的sql一开始可以读到10条数据，当事务B的sql执行完之后，事务A再执行一遍相同sql，冒出15条是数据，那么事务A前后两次读取的结果不一样，认为是出现了幻觉。</li>
+<li>不可重复读：事务A因为事务B的提交，导致前后读取的值不一致。事务A的sql第一次读取某条数据为v1,事务B修改为v2并提交，事务A再读时为V2，而不是v1.</li>
+<li>参考：<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_39616674/article/details/110868947">https://blog.csdn.net/weixin_39616674/article/details/110868947</a></li>
+<li>那么，不同的隔离级别会导致什么问题呢？待补充</li>
+<li>读提交是会存在幻读的。</li>
+</ul>
+</li>
+<li>mvcc原理理解:<a target="_blank" rel="noopener" href="https://blog.csdn.net/SnailMann/article/details/94724197%EF%BC%8Cmvcc%E7%9A%84%E5%AE%9E%E7%8E%B0%E9%9C%80%E8%A6%81%E7%BB%93%E5%90%88">https://blog.csdn.net/SnailMann/article/details/94724197，mvcc的实现需要结合</a> 记录的3个隐式字段、undo log、read view(附属隔离级别的一致性读视图)一起来实现。</li>
+<li>innodb里面的读分为:当前读和读快照。当前读指读取最新数据，并且会对数据进行加锁，不准其他事务修改数据；快照读指的是不加锁的读，基于mvcc实现，读到的数据可能不是最新版本。</li>
+<li>mysql中的并发场景分为：读-读，读-写，写-写，mvcc只能解决读-写的并发问题，可以提高mysql的并发能力，可以解决读时不阻塞写，写时不阻塞读，以及脏读，幻读，不可重复读问题，但是不能解决数据更新丢失问题。写-写引发的问题需要引入锁来解决。</li>
+</ul>
+<ol start="6">
+<li>innodb引擎采用B+树存储数据</li>
+</ol>
+<ul>
+<li>innodb是按索引顺序进行存储数据的，插入数据后必须保证索引数据是有顺序的。存储数据的方式有很多重，比如hash表，有序数组，二叉树等，其中hash表只能进行等值查找，根据k值找到对应的位置数据，查询的方式受限；数组存储方便按位置索引查询数据，但是插入数据后需要移动数据，因此也不能使用；二叉树的查询效率相对较高，小于根节点的放左边，大于的放右边，比如一个二叉树放100次数据，大约需要20层就可以存下，也就是从磁盘查询一次数据大约需要20次，每次磁盘读数据块大约10ms。不过因为二叉树为了保证效率，有序，插入数据后还需要保证是平衡二叉树，因此也会进行搬迁数据，所以综上，当一个节点下面有N(&gt;2)个节点时，就可以在一层存放更多的数据，也就形成了N叉树，这就是B+数据的精髓。假如一个表的主键索引是一个整型值，那么一个数据页大约可以存1200多个节点，也就是N=1200，那么铺满4层节点的数据，也就是1200的3次方值，大约17亿。所以查找一个10亿数据量的表的索引，大约访问3次磁盘就能找到对应的数据页了，查询效率很高。所以N叉树在读写的性能比较突出，又适配磁盘的随机读取方式(给一个索引位置，就可以直接去索引对应的磁盘位置查找数据页)，可以减少单次查询访问磁盘的次数，因此被很多存储索引采用。</li>
+<li>innodb引擎里的表实际就是多个B+数据，数据存放在主键索引的B+树节点上，其他的索引(二级索引)B+树节点下面存放的主键索引值。</li>
+<li>B+树的叶子节点存储的时page，一个page可以存储多行。N是由页大小和索引大小决定的。</li>
+<li>一个数据页大小是16k， 如果有的数据超过16k，就会放在多个不同的数据页上，查这样的记录是要访问多个数据页的</li>
+</ul>
+<ol start="7">
+<li>走索引的特殊案例</li>
+</ol>
+<ul>
+<li>最左前缀原则，B+树的索引结构，可以利用索引的最左前缀原则来定位记录，这个最左前缀可以是联合索引的最左N个字段，可以是字符串索引的最左M个索引，所以like语句中like “xxx%”可以走索引，但是like “%xxx”不能走索引(like 更详细的使用规则待修订)</li>
+<li>name like “%xx”/“%x%”语句是否走索引问题研究:<ul>
+<li>%在最左边时，一般不走索引树快速定位，因为不满足最左原则，而是直接遍历整个主键索引树或者二级索引树；</li>
+<li>那什么时候走主键索引树，什么时候走二级索引树？<ul>
+<li>当name是联合索引中的一部分，并且select里面也有联合索引字段，那么走二级索引，因为二级索引的叶子节点的数据少，索引树的内存占用少，走主键就会遍历整理表，内存占用大</li>
+<li>当name是普通索引时，并且select的字段不是索引字段，就会走遍历主键索引树(全表查询)，避免回表。</li>
+<li>注意两点:通过索引树快速定位和通过索引树遍历查询是两个东西，第一个表示走索引进行快速定位，第二个只是表示会选择一个索引树进行全部遍历，然后进行条件匹配选择，比如遍历主键索引树表示全表扫描，遍历二级索引树表示扫描整个二级索引树的所有节点，然后跳到合适的数据节点再根据情况进行回表到主键索引树进行查询其他字段结果。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>name between a and b,若name符合索引的最左原则，则可以走索引查询，而且效果比name in (xx,xx,xx)好，因为in</li>
+<li>索引分为一级索引(主键)和二级索引(普通索引)，优先推荐直接走主键索引，当必须走二级索引时，会发生一个回标操作或者索引下推操作(5.6开始)，二级索引节点下面存放的数据时主键索引值，当二级索引下面的节点包含了一些where条件时，会优先通过索引下推的方式来进行过滤数据或者直接给出数据，比如select id from test where name like ‘张%’ and age =10 and gender=’男’;<br>如果主键索引为id,二级索引为(name,age)时，就会在使用name的同时，在判断age是否符合，最后再到主键索引里面根据gender捞取符合的数据。</li>
+<li>删除索引或者创建主键都会导致整个表重建</li>
+</ul>
+<ol start="8">
+<li>MyISAM引擎</li>
+</ol>
+<ul>
+<li>不支持事务</li>
+<li>不支持行锁，支持表锁</li>
+</ul>
+<ol start="9">
+<li>mysql中锁的种类</li>
+</ol>
+<ul>
+<li>全局锁，锁整个数据库</li>
+<li>表级锁，锁整个表</li>
+<li>行级锁，锁一个或者多行数据</li>
+<li>读锁S，是共享锁</li>
+<li>写锁X，是排他锁</li>
+</ul>
+<ol start="10">
+<li><p>数据库中的乐观锁</p>
+</li>
+<li><p>数据库并发优化</p>
+</li>
+</ol>
+<ul>
+<li>缩小事务长度，将多个事务变更的相同行记录放在最后操作，减少事务占用的时间</li>
+<li>打开死锁自动检测，同时通过降低访问相同资源的并发量降低死锁的概率</li>
+</ul>
+<ol start="12">
+<li>死锁检测时机</li>
+</ol>
+<ul>
+<li>当一个事务要加锁访问的行上已经有锁时，才会去检测是否死锁，并且也不是检测所有的事务，而是只检测有关联性的事务之间是否存在死锁。</li>
+<li>对于普通的读是不需要检测死锁的，因为读的是在事务隔离级别下的快照都，非当前读。</li>
+</ul>
+<ol start="13">
+<li>事务启动时机</li>
+</ol>
+<ul>
+<li>begin/start transaction 并不是一个事务的起点，当在真正开始执行一个操作innodb表语句的sql时，事务才真正启动。</li>
+</ul>
+<ol start="14">
+<li>MVCC相关</li>
+</ol>
+<ul>
+<li>mvcc解决的是读写冲突，里面涉及到的一致性读视图read view是读快照，重点是规定读的数据范围，当事务里同时用到更新语句时，使用的是当前读，也就是必须读最新的提交数据，因为有个原则是，更新数据之前必须先读再写，而这个读就是“当前读”</li>
+<li>InnoDB 的行数据有多个版本，每个数据版本有自己的 row trx_id，每个事务或者语句有自己的一致性视图。普通查询语句是一致性读，一致性读会根据 row trx_id 和一致性视图确定数据版本的可见性。<ul>
+<li>对于可重复读，查询只承认在事务启动前就已经提交完成的数据(时间维度来理解);</li>
+<li>对于读提交，查询只承认在语句启动前就已经提交完成的数据(时间维度来理解)；</li>
+</ul>
+</li>
+</ul>
+<ol start="15">
+<li>sql语句优化</li>
+</ol>
+<ul>
+<li>使用强制索引force index，优点是可以人为指定走哪个索引，防止mysql基于行数等统计值选错索引，缺点是sql语句不优雅，而且如果索引名字变化或者索引被删除，就会导致语句出问题，而且迁移到别的数据库也可能语法不兼容.</li>
+</ul>
+<ol start="16">
+<li>如果某次写入使用了 change buffer 机制，之后主机异常重启，是否会丢失 change buffer和数据?</li>
+</ol>
+<ul>
+<li>这个问题的答案是不会丢失，虽然是只更新内存，但是在事务提交的时候，我们把 change buffer 的操作也记录到 redo log 里了，所以崩溃恢复的时候，change buffer 也能找回来。</li>
+</ul>
+<ol start="17">
+<li>merge：应用change buffer中与该数据页相关的操作的这个过程，我们称之为数据页的merge操作<br>第一步:merge 的执行流程是这样的：从磁盘读入数据页到内存（老版本的数据页）；<br>第二步:从 change buffer 里找出这个数据页的 change buffer 记录 (可能有多个），依次应用，得到新版数据页；<br>第三步:写 redo log。这个 redo log 包含了数据页的变更(Merge的过程中要修改数据页)和 change buffer 的变更。<br>到这里 merge 过程就结束了。这时候，数据页和内存中 change buffer 对应的磁盘位置都还没有修改，属于脏页，之后各自刷回自己的物理数据，就是另外一个过程了。<br>参考链接:<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1624144">https://cloud.tencent.com/developer/article/1624144</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/07/01/kafka%E8%87%AA%E9%97%AE%E8%87%AA%E7%AD%94/" rel="prev" title="kafka自问自答">
+                  <i class="fa fa-chevron-left"></i> kafka自问自答
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">realDing</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
