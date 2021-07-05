@@ -22,6 +22,8 @@ on作用会先根据on的条件关联出符合的两行再组成一个完整的�
 
 4. update 语句执行过程
 * 连接器->分析器->优化器->执行器,和select不同的是执行器里面逻辑不同，首先从内存中查找数据(此数据所在的数据页在内存中)，如果有直接取出对应的行数据进行更新，如果没有,并且走的是主键索引，则从磁盘捞出对应的数据放入内存，然后做相应的更新操作，更新完刷新内存中的值，同时写入redo log，然后再写入binglog，提交事务，代表此次更新完成。这就能保证数据库从crash状态恢复时，不会丢数据，简称crash-safe。如果内存中没有整个数据，并且更新走的是二级索引(普通索引)，那么就会将变更放在change buffer中，同时在redo log中记录change buffer类型的日志信息，再写入binglog，提交事务。当下次有个select语句要查询刚才和放入change buffer一样记录时，就会从磁盘捞取相应的数据页到内存中，再作用change buffer中的变更，最后将更新后的数据方会给客户端，同时内存里保存最新的数据。只有走普通索引时才会使用change buffer，主键时不会使用，change buffer可以减少随机读磁盘次数，redo log可以减少随机写磁盘次数，这两个都有相应的物理日志(有相应的文件名对应)，mysql后台会有个merge线程定时的将内存中的脏页数据刷到磁盘，并不是将redo log和change buffer的日志信息输入磁盘，这两个日志是在宕机恢复时才会使用的。
+* 写redo log文件，是在更新内存之后的.
+* redo log记录的不是具体的数据是数据页的变化，磁盘上面的数据也不是根据redo log来修改的，是把内存中的数据页的脏页刷新到磁盘数据页中
 * redo log的文件在mysql里面通常有几个，命名格式为ib_logfile0,ib_logfile1...,个数和大小可以设置。redo log技术就是mysql中的WAL技术(write-Ahead logging),就是先写日志，在写磁盘。redo log日志放在redo log file后会在恰当的时机将数据刷到数据文件即表中。
 * redo log 和binglog的刷盘策略可以设置，分别设置innodb_flush_log_at_trx_commit和sync_binlog两个都为1时就能提供两阶段提交功能，保证数据不丢失，即使mysql异常宕机重启。redo log是innodb引擎的log文件，binglog是mysql server自带的log文件。
 * 何时会擦除redo log并更新到数据文件中：系统空闲时、redo log file空间不足时、mysql正常关闭时。
@@ -92,3 +94,16 @@ on作用会先根据on的条件关联出符合的两行再组成一个完整的�
 * InnoDB 的行数据有多个版本，每个数据版本有自己的 row trx_id，每个事务或者语句有自己的一致性视图。普通查询语句是一致性读，一致性读会根据 row trx_id 和一致性视图确定数据版本的可见性。
   * 对于可重复读，查询只承认在事务启动前就已经提交完成的数据(时间维度来理解);
   * 对于读提交，查询只承认在语句启动前就已经提交完成的数据(时间维度来理解)；
+
+15. sql语句优化
+* 使用强制索引force index，优点是可以人为指定走哪个索引，防止mysql基于行数等统计值选错索引，缺点是sql语句不优雅，而且如果索引名字变化或者索引被删除，就会导致语句出问题，而且迁移到别的数据库也可能语法不兼容.
+
+16. 如果某次写入使用了 change buffer 机制，之后主机异常重启，是否会丢失 change buffer和数据?
+* 这个问题的答案是不会丢失，虽然是只更新内存，但是在事务提交的时候，我们把 change buffer 的操作也记录到 redo log 里了，所以崩溃恢复的时候，change buffer 也能找回来。
+
+17. merge：应用change buffer中与该数据页相关的操作的这个过程，我们称之为数据页的merge操作
+第一步:merge 的执行流程是这样的：从磁盘读入数据页到内存（老版本的数据页）；
+第二步:从 change buffer 里找出这个数据页的 change buffer 记录 (可能有多个），依次应用，得到新版数据页；
+第三步:写 redo log。这个 redo log 包含了数据页的变更(Merge的过程中要修改数据页)和 change buffer 的变更。
+到这里 merge 过程就结束了。这时候，数据页和内存中 change buffer 对应的磁盘位置都还没有修改，属于脏页，之后各自刷回自己的物理数据，就是另外一个过程了。
+参考链接:https://cloud.tencent.com/developer/article/1624144
