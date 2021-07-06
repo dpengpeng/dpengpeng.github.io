@@ -28,7 +28,7 @@
 <meta property="og:description" content="select * for udpate   for udpate应用的是悲观锁，根据select的数据集范围会对不同量级的数据进行加锁，良好情况下，比如通过主键、索引定位到行，则进行行加锁，较差情况下，可能进行表锁，使用时需要针对不同的sql进行分析，判定加锁的范围。在高并发下，可能对性能有影响。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-07-02T14:26:54.000Z">
-<meta property="article:modified_time" content="2021-07-05T15:33:52.012Z">
+<meta property="article:modified_time" content="2021-07-06T16:45:28.313Z">
 <meta property="article:author" content="realDing">
 <meta name="twitter:card" content="summary">
 
@@ -250,7 +250,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">Edited on</span>
-        <time title="Modified: 2021-07-05 23:33:52" itemprop="dateModified" datetime="2021-07-05T23:33:52+08:00">2021-07-05</time>
+        <time title="Modified: 2021-07-07 00:45:28" itemprop="dateModified" datetime="2021-07-07T00:45:28+08:00">2021-07-07</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -324,6 +324,7 @@
 <li>mvcc原理理解:<a target="_blank" rel="noopener" href="https://blog.csdn.net/SnailMann/article/details/94724197%EF%BC%8Cmvcc%E7%9A%84%E5%AE%9E%E7%8E%B0%E9%9C%80%E8%A6%81%E7%BB%93%E5%90%88">https://blog.csdn.net/SnailMann/article/details/94724197，mvcc的实现需要结合</a> 记录的3个隐式字段、undo log、read view(附属隔离级别的一致性读视图)一起来实现。</li>
 <li>innodb里面的读分为:当前读和读快照。当前读指读取最新数据，并且会对数据进行加锁，不准其他事务修改数据；快照读指的是不加锁的读，基于mvcc实现，读到的数据可能不是最新版本。</li>
 <li>mysql中的并发场景分为：读-读，读-写，写-写，mvcc只能解决读-写的并发问题，可以提高mysql的并发能力，可以解决读时不阻塞写，写时不阻塞读，以及脏读，幻读，不可重复读问题，但是不能解决数据更新丢失问题。写-写引发的问题需要引入锁来解决。</li>
+<li>事务的隔离级别在代码上就是通过MVCC实现的。</li>
 </ul>
 <ol start="6">
 <li>innodb引擎采用B+树存储数据</li>
@@ -417,7 +418,30 @@
 <li>这个问题的答案是不会丢失，虽然是只更新内存，但是在事务提交的时候，我们把 change buffer 的操作也记录到 redo log 里了，所以崩溃恢复的时候，change buffer 也能找回来。</li>
 </ul>
 <ol start="17">
-<li>merge：应用change buffer中与该数据页相关的操作的这个过程，我们称之为数据页的merge操作<br>第一步:merge 的执行流程是这样的：从磁盘读入数据页到内存（老版本的数据页）；<br>第二步:从 change buffer 里找出这个数据页的 change buffer 记录 (可能有多个），依次应用，得到新版数据页；<br>第三步:写 redo log。这个 redo log 包含了数据页的变更(Merge的过程中要修改数据页)和 change buffer 的变更。<br>到这里 merge 过程就结束了。这时候，数据页和内存中 change buffer 对应的磁盘位置都还没有修改，属于脏页，之后各自刷回自己的物理数据，就是另外一个过程了。<br>参考链接:<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1624144">https://cloud.tencent.com/developer/article/1624144</a></li>
+<li>merge：应用change buffer中与该数据页相关的操作的这个过程，我们称之为数据页的merge操作<br>第一步:merge 的执行流程是这样的：从磁盘读入数据页到内存（老版本的数据页）；<br>第二步:从 change buffer 里找出这个数据页的 change buffer 记录 (可能有多个），依次应用，得到新版数据页；<br>第三步:写 redo log。这个 redo log 包含了数据页的变更(Merge的过程中要修改数据页)和 change buffer 的变更。<br>到这里 merge 过程就结束了。这时候，数据页和内存中 change buffer 对应的磁盘位置都还没有修改，属于脏页，之后各自刷回自己的物理数据，就是另外一个过程了。<br>参考链接:<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1624144">https://cloud.tencent.com/developer/article/1624144</a><br>当内存数据页跟磁盘数据页内容不一致的时候，我们称这个内存页为“脏页”。内存数据写入到磁盘后，内存和磁盘上的数据页的内容就一致了，称为“干净页”。</li>
+</ol>
+<ol start="18">
+<li>explain 各个字段解析</li>
+<li>如何将较长的字符串作为索引:</li>
+</ol>
+<ul>
+<li>mysql支持前缀索引，可以将字符串的一部分作为索引。这里字符串的长度要选择尽量有区分度，减少查询的次数。</li>
+<li>将字符串计算成成hash值存储</li>
+</ul>
+<ol start="20">
+<li>mysql什么时候flush脏页</li>
+</ol>
+<ul>
+<li>redo log满了，这时候系统会停止所有更新操作，把 checkpoint 往前推进，redo log 留出空间可以继续写。checkpoint 可不是随便往前修改一下位置就可以的。把 checkpoint 位置从 CP 推进到 CP’，就需要将两个点之间的日志，对应的所有脏页都 flush 到磁盘上。之后，从 write pos 到 CP’之间就是可以再写入的 redo log 的区域。</li>
+<li>系统内存满了，就要淘汰内存中的一些数据页，如果淘汰的是”脏页”，就要将脏页写到磁盘.</li>
+<li>MySQL 认为系统“空闲”的时候.?啥叫空闲,io低？</li>
+<li>mysql正常关闭的时候.<br>备注:刷脏页过程不用动redo log文件的,redo log在“重放”的时候，如果一个数据页已经是刷过的，会识别出来并跳过。</li>
+</ul>
+<ol start="21">
+<li><p>mysql断电重启<br>如果断电了重启导致内存丢失，通过redo log进行数据恢复,Redolog 的空间是循环使用的，无所谓释放。 对应的内存页会变成干净页。但是等淘汰的时候才会逐出内存.<br>重启了就从checkpoint 的位置往后扫。 如果已经之前刷过盘的, 不会重复应用redo log.</p>
+</li>
+<li><p>几种概念<br>flush 一般是说刷脏页，<br>purge一般是指清undo log,<br>merge一般是指应用change buffer</p>
+</li>
 </ol>
 
     </div>
