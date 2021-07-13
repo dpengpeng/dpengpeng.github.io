@@ -20,25 +20,27 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
 <script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;dpengpeng.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Gemini&quot;,&quot;version&quot;:&quot;8.5.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;fadeInDown&quot;,&quot;post_body&quot;:&quot;fadeInDown&quot;,&quot;coll_header&quot;:&quot;fadeInLeft&quot;,&quot;sidebar&quot;:&quot;fadeInUp&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;Searching...&quot;,&quot;empty&quot;:&quot;We didn&#39;t find any results for the search: ${query}&quot;,&quot;hits_time&quot;:&quot;${hits} results found in ${time} ms&quot;,&quot;hits&quot;:&quot;${hits} results found&quot;},&quot;path&quot;:&quot;&#x2F;search.xml&quot;,&quot;localsearch&quot;:{&quot;enable&quot;:true,&quot;trigger&quot;:&quot;auto&quot;,&quot;top_n_per_article&quot;:1,&quot;unescape&quot;:false,&quot;preload&quot;:false}}</script><script src="/js/config.js"></script>
-<meta name="description" content="自强不息 厚德载物">
-<meta property="og:type" content="website">
-<meta property="og:title" content="ENOUGH">
-<meta property="og:url" content="https://dpengpeng.github.io/index.html">
+<meta name="description" content="clickhouse集群搭建clickhouse是一种olap型数据库，采用列式存储，适合进行分析类业务，sql语句丰富且与mysql语句类似。 采用的集群架构vip –&gt; chproxy集群 –&gt; clickhouse集群(3*2) vipvip的一种架构方式：keepalived+haproxy，分别部署到两台机器haproxy负责分发请求，keepalived负责维护haprox">
+<meta property="og:type" content="article">
+<meta property="og:title" content="clickhouse">
+<meta property="og:url" content="https://dpengpeng.github.io/2021/07/13/clickhouse/index.html">
 <meta property="og:site_name" content="ENOUGH">
-<meta property="og:description" content="自强不息 厚德载物">
+<meta property="og:description" content="clickhouse集群搭建clickhouse是一种olap型数据库，采用列式存储，适合进行分析类业务，sql语句丰富且与mysql语句类似。 采用的集群架构vip –&gt; chproxy集群 –&gt; clickhouse集群(3*2) vipvip的一种架构方式：keepalived+haproxy，分别部署到两台机器haproxy负责分发请求，keepalived负责维护haprox">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-07-13T15:46:10.000Z">
+<meta property="article:modified_time" content="2021-07-13T15:46:32.137Z">
 <meta property="article:author" content="realDing">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="https://dpengpeng.github.io/">
+<link rel="canonical" href="https://dpengpeng.github.io/2021/07/13/clickhouse/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:true,&quot;isPost&quot;:false,&quot;lang&quot;:&quot;en&quot;,&quot;comments&quot;:&quot;&quot;,&quot;permalink&quot;:&quot;&quot;,&quot;path&quot;:&quot;index.html&quot;,&quot;title&quot;:&quot;&quot;}</script>
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:true,&quot;lang&quot;:&quot;en&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;dpengpeng.github.io&#x2F;2021&#x2F;07&#x2F;13&#x2F;clickhouse&#x2F;&quot;,&quot;path&quot;:&quot;2021&#x2F;07&#x2F;13&#x2F;clickhouse&#x2F;&quot;,&quot;title&quot;:&quot;clickhouse&quot;}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
-<title>ENOUGH</title>
+<title>clickhouse | ENOUGH</title>
   
 
 
@@ -132,7 +134,7 @@
 
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           Table of Contents
@@ -145,6 +147,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#clickhouse%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA"><span class="nav-number">1.</span> <span class="nav-text">clickhouse集群搭建</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%87%E7%94%A8%E7%9A%84%E9%9B%86%E7%BE%A4%E6%9E%B6%E6%9E%84"><span class="nav-number">1.1.</span> <span class="nav-text">采用的集群架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#vip"><span class="nav-number">1.2.</span> <span class="nav-text">vip</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#chproxy%E9%9B%86%E7%BE%A4"><span class="nav-number">1.3.</span> <span class="nav-text">chproxy集群</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#clickhouse%E9%9B%86%E7%BE%A4"><span class="nav-number">1.4.</span> <span class="nav-text">clickhouse集群</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%89%8D%E6%9C%9F%E5%87%86%E5%A4%87"><span class="nav-number">1.4.1.</span> <span class="nav-text">前期准备</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-number">1.5.</span> <span class="nav-text">参考链接</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BF%E9%97%AEch"><span class="nav-number">1.5.1.</span> <span class="nav-text">访问ch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9B%86%E7%BE%A4%E5%AE%89%E8%A3%85"><span class="nav-number">1.5.2.</span> <span class="nav-text">集群安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ClickHouse-%E8%A1%A8%E5%BC%95%E6%93%8E"><span class="nav-number">1.5.3.</span> <span class="nav-text">ClickHouse 表引擎</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BB%BA%E8%A1%A8%E8%AF%AD%E5%8F%A5"><span class="nav-number">1.5.4.</span> <span class="nav-text">建表语句</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98"><span class="nav-number">1.5.5.</span> <span class="nav-text">常见问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9B%86%E7%BE%A4%E6%89%A9%E5%AE%B9"><span class="nav-number">1.5.6.</span> <span class="nav-text">集群扩容</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9B%86%E7%BE%A4%E7%BB%B4%E6%8A%A4"><span class="nav-number">1.5.7.</span> <span class="nav-text">集群维护</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E6%90%AC%E8%BF%81"><span class="nav-number">1.5.8.</span> <span class="nav-text">数据搬迁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#clickhosue-%E4%B8%AD%E4%B8%80%E4%BA%9B%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">1.5.9.</span> <span class="nav-text">clickhosue 中一些常用命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A2%9D%E5%A4%96%E8%A1%A5%E5%85%85"><span class="nav-number">1.5.10.</span> <span class="nav-text">额外补充</span></a></li></ol></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -206,171 +209,17 @@
 </noscript>
 
 
-    <div class="main-inner index posts-expand">
+    <div class="main-inner post posts-expand">
 
-    
+
+  
 
 
 <div class="post-block">
   
   
 
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://dpengpeng.github.io/2021/07/13/flink/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/header.jpg">
-      <meta itemprop="name" content="realDing">
-      <meta itemprop="description" content="自强不息 厚德载物">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ENOUGH">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/07/13/flink/" class="post-title-link" itemprop="url">flink</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-      
-
-      <time title="Created: 2021-07-13 23:46:50 / Modified: 23:47:58" itemprop="dateCreated datePublished" datetime="2021-07-13T23:46:50+08:00">2021-07-13</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="flink"><a href="#flink" class="headerlink" title="flink"></a>flink</h2><ol>
-<li><p>flink执行图：</p>
-<ul>
-<li>streamGraph–&gt;jobGraph–&gt;executionGraph</li>
-</ul>
-</li>
-<li><p>flink的两种状态</p>
-<ul>
-<li>operator state</li>
-<li>keyed state</li>
-</ul>
-</li>
-<li><p>flink状态一致性级别</p>
-<ul>
-<li>精确一次</li>
-<li>至少一次</li>
-<li>做多一次</li>
-</ul>
-</li>
-<li><p>几种状态后端</p>
-<ul>
-<li>MemoryStateBackend</li>
-<li>FsStateBackend</li>
-<li>RocksDBStateBackend</li>
-</ul>
-</li>
-<li><p>flink的常用数据类型</p>
-<ul>
-<li>java的基础数据类型</li>
-<li>tuple</li>
-<li>pojo</li>
-<li>ArrayList,HashMap</li>
-</ul>
-</li>
-<li><p>flink中的时间类型</p>
-<ul>
-<li>event time</li>
-<li>processing time</li>
-<li>ingestion time</li>
-</ul>
-</li>
-<li><p>flink on yarn</p>
-<ul>
-<li>两种模式：<ul>
-<li>session模式: 所有任务共享一个flink 集群，任务与任务之间会有影响，不用</li>
-<li>pre-job模式: 每个任务一个独立的flinK集群,但是jar包的解析，生成JobGraph都是在客户端，当用户多时，客户端压力大</li>
-<li>application模式：每个任务一个独立的flinlk集群，</li>
-</ul>
-</li>
-<li>Flink On Yarn依赖Yarn资源调度和管理，动态申请资源启动Flink Cluster。每个被Yarn调度运行的Flink Cluster即为一个Application。Application包含了完成的Flink角色JobManager（ApplicationMaster/Container）、TaskManager（Container) </li>
-</ul>
-</li>
-</ol>
-<h1 id="flink笔记"><a href="#flink笔记" class="headerlink" title="flink笔记"></a>flink笔记</h1><h2 id="1-checkpoint-–-gt-snapshot"><a href="#1-checkpoint-–-gt-snapshot" class="headerlink" title="1.checkpoint –&gt;snapshot"></a>1.checkpoint –&gt;snapshot</h2><p>周期性的自动做状态快照，记录任务所有节点再某一时刻的处理状态，便于任务异常重启时从异常时间点进行状态恢复，仿佛没有发生任何异常。<br>执行checkpinting时，会在流中插入一个barrier，相当于一个屏障，用来区分某一个节点的前与后；</p>
-<h2 id="2-savepoint"><a href="#2-savepoint" class="headerlink" title="2.savepoint"></a>2.savepoint</h2><p>手动创建一个保存点，用于停止任务然后重启，从某一个指定的时间点进行重新运行</p>
-<h2 id="3-event-time-and-watermark"><a href="#3-event-time-and-watermark" class="headerlink" title="3.event-time and watermark"></a>3.event-time and watermark</h2><p>event-time 描述真实的事件发生时间<br>使用event-time就需要提供timestamp提取器和watermark生成器<br>watermark的作用:This is precisely what watermarks do — they define when to stop waiting for earlier events.<br>带时间戳的事件流在不确定是否有序的情况下进行传输，使用watermark来衡量何时停止等待早期事件，在时间窗口中经常使用。</p>
-<p>event-time处理依赖watermark生成器，根据timestamp生成一个watermark(特殊时间戳)，然后插入到事件流中。<br>假设一个watermark=t,则代表可以认为时间T&lt;=t的事件流都已经全部到达了。当后期一个T &lt; t 的事件流再次出现时，可以认为此事件流为迟到的事件。</p>
-<p>对于迟到的事件，默认是删除。也可以通过side-output方式输出到其他流中进行针对处理。</p>
-<h2 id="4-window-功能可以用keyedProcessFunction来间接实现"><a href="#4-window-功能可以用keyedProcessFunction来间接实现" class="headerlink" title="4.window 功能可以用keyedProcessFunction来间接实现"></a>4.window 功能可以用keyedProcessFunction来间接实现</h2><h2 id="5-exactly-once"><a href="#5-exactly-once" class="headerlink" title="5.exactly-once"></a>5.exactly-once</h2><p>任务异常时，消息的消费就会存在丢失或者重复。那么flink的消息处理会面临以下三种：</p>
-<ol>
-<li>Flink makes no effort to recover from failures (at most once)</li>
-<li>Nothing is lost, but you may experience duplicated results (at least once)</li>
-<li>Nothing is lost or duplicated (exactly once)</li>
-</ol>
-<p>at most once意味着没有开启checkpointing功能;<br>exactly-once的开启意味着barrier对齐功能开启；<br>at least once的开启意味着barrier对齐功能没有开启；</p>
-<p>barrier对齐指的是，一个operator假设接收两个以上的输入流，当发生一次checkpoint时，每个输入流都会插入一个barrier，并且这些barrier都会流到这个operator上，如果开始对齐功能，则这个operator上的checkpoint会等待所有的barrier收集齐了才能继续进行后续数据的传输，先到的barrier需要等待后到的barrier并且缓存自己数据线源源不断的流数据；如果不开启对齐功能，则每个数据流自己barrier处理完后，operator会继续处理它后面的新数据，不需要关注其他输入流是否完成了barrier,此时当发生故障重启时，某些先checkpoint的数据流的数据就会被重新消费，因为一次完整的state需要所有的operator都完成checkpoint；</p>
-<h2 id="6-Exactly-Once-End-to-end"><a href="#6-Exactly-Once-End-to-end" class="headerlink" title="6.Exactly Once End-to-end"></a>6.Exactly Once End-to-end</h2><p>端到端的一致性提供更好到的<br>To achieve exactly once end-to-end, so that every event from the sources affects the sinks exactly once, the following must be true:</p>
-<ol>
-<li>your sources must be replayable, and</li>
-<li>your sinks must be transactional (or idempotent)</li>
-</ol>
-<h2 id="7-keyed-stream-amp-keyed-state"><a href="#7-keyed-stream-amp-keyed-state" class="headerlink" title="7.keyed stream &amp; keyed state"></a>7.keyed stream &amp; keyed state</h2><p>通过keyBy处理后的流，假设下游需要保存一个keyed state，那个每个key都会有相应的逻辑分区，实际上每个key的数据都是独立的，并不会多个key的state保存在同一个state中，不会常规的都放在同一个map的结构，key/value中的state value会被严格的绑定到event’s key。</p>
-<h2 id="8-checkpoint-event-time-watermark-exactly-once关系"><a href="#8-checkpoint-event-time-watermark-exactly-once关系" class="headerlink" title="8.checkpoint,event time,watermark,exactly-once关系"></a>8.checkpoint,event time,watermark,exactly-once关系</h2><ol>
-<li>checkpoint是用来给数据流进行状态快照的，有没有开启checkpoint意味着任务重启时是否能保留之前的处理状态，这是一个单独的参数</li>
-<li>event-time与watermark必须绑定，这个是用来定义消息的实际时间和判断是否继续等待早期事件的依据时间点,这两个参数与checkpoint是否开启是无关的。</li>
-<li>exactly-once语句和checkpoint绑定的，依赖状态快照，但是与watermark是无关的；</li>
-</ol>
-<h2 id="9-table-api-and-sql-api"><a href="#9-table-api-and-sql-api" class="headerlink" title="9.table api and sql api"></a>9.table api and sql api</h2><p>flink的流批一体是通过table 和sql功能实现的，目前table planner推荐使用Blink planner;<br>flink sql的环境设置分三步：<br>EnvironmentSettings settings = EnvironmentSettings.newInstance().useBlinkPlanner().inStreamingMode().build();<br>StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();<br>StreamTableEnvironment tEnv = StreamTableEnvironment.create(env, settings);</p>
-<p>flink sql里面的execute()方法不用显示调用了。</p>
-<h2 id="10-flink-sql-控制并发度"><a href="#10-flink-sql-控制并发度" class="headerlink" title="10 flink sql 控制并发度"></a>10 flink sql 控制并发度</h2><h2 id="11-flink-keyby"><a href="#11-flink-keyby" class="headerlink" title="11.flink keyby"></a>11.flink keyby</h2><p>被keyby分流的后的数据会进入一个逻辑分区，可以理解为同样的一个key会被路由到同样的分区，但是一个分区可以接受不同的key划分过来的数据流，flink是通过散列的方式进行逻辑划分的，所以在keyby后面的计算单元中，需要注意一点，如果创建个容器进行装数据，那么如果是非state方式比如使用常规的hashmap进行存放数据，<br>那么这个hashmap实例数和并发数相等，同一个hashmap实例会被分配给hash(key)相同的不同key共享使用。而如果使用状态进行存储例如mapstate，那么因为state是根据key进行唯一绑定的，<br>所以不同的key就会有自己唯一对应的state进行存储数据。</p>
-<h2 id="12-flink-taskmanager-内存"><a href="#12-flink-taskmanager-内存" class="headerlink" title="12.flink taskmanager 内存"></a>12.flink taskmanager 内存</h2><ul>
-<li>从1.10后，flink对内存分配进行了升级。其中需要注意managed memory的使用；</li>
-<li>managed memory 分配在堆外非直接内存中，其作用是：Batch jobs用来排序、存放HashTable、中间结果的缓存；Streaming jobs的RocksDB State Backend Memory。因此在streaming jobs中并且没有使用rocksdb statebackend时，这个值应该调整的比较小，可以为0，苏宁调整为flink memory的0.04，flink默认为0.4。</li>
-</ul>
-<h2 id="13-flink-taskmanager-slot-cpu-memory"><a href="#13-flink-taskmanager-slot-cpu-memory" class="headerlink" title="13.flink taskmanager slot cpu memory"></a>13.flink taskmanager slot cpu memory</h2><ul>
-<li>flink任务都是运行在taskmanager中，jobmanager主要负责任务的调度等，taskmanager 的内存可以人为的自定义大小。</li>
-<li>taskmanager中的slot默认为1个，可以设置多个，taskmanager中的cpu个数默认和slot是1:1比例的，每个slot会的内存是根据taskmanager进行平均分配的，内存资源是隔离的，但是cpu不是。</li>
-<li>每个taskmanager只有一个jvm进行，slot相当于线程，多个slot是复用一个jvm的连接等资源。</li>
-<li>实际实践中，根据taskmanager的大小，可以自行决定采用一个slot还是多个slot的方式来部署计算单元。</li>
-<li>flink的可以根据需要执行jar包是人为的设置一些参数的大小，例如manager memory通过-yD taskmanager.memory.managed.fraction=0.04进行设置，slot数量通过-ys 2 进行设置。</li>
-</ul>
-<h2 id="14-flink-中每个slot与线程的关系"><a href="#14-flink-中每个slot与线程的关系" class="headerlink" title="14.flink 中每个slot与线程的关系"></a>14.flink 中每个slot与线程的关系</h2>
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
     <link itemprop="mainEntityOfPage" href="https://dpengpeng.github.io/2021/07/13/clickhouse/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -383,9 +232,9 @@
       <meta itemprop="name" content="ENOUGH">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/07/13/clickhouse/" class="post-title-link" itemprop="url">clickhouse</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          clickhouse
+        </h1>
 
         <div class="post-meta-container">
           <div class="post-meta">
@@ -409,7 +258,7 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <h1 id="clickhouse集群搭建"><a href="#clickhouse集群搭建" class="headerlink" title="clickhouse集群搭建"></a>clickhouse集群搭建</h1><p>clickhouse是一种olap型数据库，采用列式存储，适合进行分析类业务，sql语句丰富且与mysql语句类似。</p>
+        <h1 id="clickhouse集群搭建"><a href="#clickhouse集群搭建" class="headerlink" title="clickhouse集群搭建"></a>clickhouse集群搭建</h1><p>clickhouse是一种olap型数据库，采用列式存储，适合进行分析类业务，sql语句丰富且与mysql语句类似。</p>
 <h2 id="采用的集群架构"><a href="#采用的集群架构" class="headerlink" title="采用的集群架构"></a>采用的集群架构</h2><p>vip –&gt; chproxy集群 –&gt; clickhouse集群(3*2)</p>
 <h2 id="vip"><a href="#vip" class="headerlink" title="vip"></a>vip</h2><p>vip的一种架构方式：keepalived+haproxy，分别部署到两台机器<br>haproxy负责分发请求，keepalived负责维护haproxy节点的failover和vip的竞选。</p>
 <h2 id="chproxy集群"><a href="#chproxy集群" class="headerlink" title="chproxy集群"></a>chproxy集群</h2><ul>
@@ -614,7 +463,6 @@
 </li>
 </ol>
 
-      
     </div>
 
     
@@ -622,497 +470,25 @@
     
 
     <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
 
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://dpengpeng.github.io/2021/07/13/springboot/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/header.jpg">
-      <meta itemprop="name" content="realDing">
-      <meta itemprop="description" content="自强不息 厚德载物">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ENOUGH">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/07/13/springboot/" class="post-title-link" itemprop="url">springboot</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-      
-
-      <time title="Created: 2021-07-13 23:42:53 / Modified: 23:45:47" itemprop="dateCreated datePublished" datetime="2021-07-13T23:42:53+08:00">2021-07-13</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <ol>
-<li><p>spring中不同的bean之间的依赖，是通过spring来进行依赖注入的，bean之间交给spring来管理.<br>spring可以在xml配置文件中，将bean的依赖关系给阐述出来，让spring读取xml来识别谁依赖谁。</p>
-</li>
-<li><p>spring配置方式<br>a.基于xml的方式进行配置<br>在xml中描述bean之间的依赖关系</p>
-<bean id="xxx" class="yyy">
-<constructor-arg ref="zzz>
-</bean>
-b.基于java的配置
-@Configuration
-public class BbConfig {
- @Bean
- public Bb bb() {
-     //依赖注入了aa这个bean
-     // return new Bb(new Aa()); 这里bb中的Aa就变成了自己创建的对象了，而不是spring创建的
-     return new Bb(aa());//这里aa()方法产生的就是spring给注入的bean
- }
- @Bean
- public Aa aa() {
-     return new Aa();
- }
-}</li>
-<li><p>工作方式<br>spring通过应用上下文（Application Context）装载bean的定义并把它们组装起来。Spring应用上<br>下文全权负责对象的创建和组装。Spring自带了多种应用上下文的实现，它们之间主要的区别<br>仅仅在于如何加载配置。</p>
-</li>
-<li><p>aop<br>面向切面编程就是说，整个系统可以划分成各种不同功能的模块，每个模块负责自己的核心功能，<br>然后有些模块可以在不影响目标模块功能的前提下，作用到目标模块上，目标模块甚至都不知道自己被附加了这个模块，<br>这是一种无入侵式的功能绑定。<br>aop相对于调用一个抽象独立出来的方法而言，好处是对目标模块无注入影响，而公用方法，是需要嵌入到某个模块代码里面被调用的，<br>修改方法可能会影响目标模块。<br>aop的应用比如日志模块，事务模块，安全模块，可以用声明的方式作用到所要影响的组件上去。<br>aop的类是一个POJO类，是切面的同时前提也是一个spring bean，spring也可以像使用其他bean那样使用切面，比如依赖注入。</p>
-</li>
-</ol>
-<p>AOP原理<br>如何把切面织入到核心逻辑中？这正是AOP需要解决的问题。换句话说，如何对调用方法进行拦截，并在拦截前后进行安全检查、日志、事务等处理，就相当于完成了所有业务功能。</p>
-<p>在Java平台上，对于AOP的织入，有3种方式：</p>
-<p>编译期：在编译时，由编译器把切面调用编译进字节码，这种方式需要定义新的关键字并扩展编译器，AspectJ就扩展了Java编译器，使用关键字aspect来实现织入；<br>类加载器：在目标类被装载到JVM时，通过一个特殊的类加载器，对目标类的字节码重新“增强”；<br>运行期：目标对象和切面都是普通Java类，通过JVM的动态代理功能或者第三方库实现运行期动态织入。</p>
-<p>最简单的方式是第三种，Spring的AOP实现就是基于JVM的动态代理。由于JVM的动态代理要求必须实现接口，如果一个普通类没有业务接口，就需要通过CGLIB或者Javassist这些第三方库实现。<br>AOP技术看上去比较神秘，但实际上，它本质就是一个动态代理，让我们把一些常用功能如权限检查、日志、事务等，从每个业务方法中剥离出来。<br>需要特别指出的是，AOP对于解决特定问题，例如事务管理非常有用，这是因为分散在各处的事务代码几乎是完全相同的，并且它们需要的参数（JDBC的Connection）也是固定的。另一些特定问题，如日志，就不那么容易实现，因为日志虽然简单，但打印日志的时候，经常需要捕获局部变量，如果使用AOP实现日志，我们只能输出固定格式的日志，因此，使用AOP时，必须适合特定的场景。<br>spring调用动态代理的对象，其实已经不是原来自己的对象了，而是被spring包装过的对象，和单纯调用原始的对象不一样</p>
-<p>spring 通过CGLIB来创建一个被aop作用的类的代理类，核心就是先初始化一个原始的类对象，然后通过继承这个类创建一个代理类，<br>等实际运行时，表面上代码层是调用原始类对象的方法，实际上，真实运行调用的是被代理类的同名方法.</p>
-<ol start="5">
-<li><p>spring使用模板来消除重复样式的代码<br>比如使用JdbcTemplate，来避免各种重复的jdbc操作，包括创建连接，捕获sqlexception，关闭连接等</p>
-</li>
-<li><p>spring容器大致可以分为两类：<br>a.基本bean 工厂的容器,最基础<br>b.基于应用上下文的容器，基于bean工厂，分了各种xxxApplicationContext 上下文，每种上下文负责初始化各自范围内的bean<br>spring容器负责bean的整个生命周期，从出生到死亡。</p>
-</li>
-</ol>
-<ol start="7">
-<li>spring对bean的操作有：自动扫描，自动装配，条件装配，占位符，spirng计算表达式，基于javaConfig，基于xml配置.</li>
-</ol>
-<ol start="8">
-<li><p>@Autowired作用在普通方法上，会在注入的时候调用一次该方法，如果方法中有实体参数，会对方法里面的参数进行装配，并调用一次该方法。<br>这个可以用来在自动注入的时候做一些初始化操作。</p>
-</li>
-<li><p>aop失效场景(原始类servcie，aop代理后的类$service，代理类相当于是包裹在service外的子类，通过同名方法，内部实际再调用原始对象的方法):<br>a.在同一个类service中，一个无aop作用的普通方法func1里调用另一个有aop作用的方法func2，此时func2的aop方法会失效<br>解释：当调用func1时，因为此方法非并没有aop作用，因此用的就是原始service对象，内部方法也是通过this.func2调用的，因此整个过程用的都是原始对象sevice<br>b.在同一个类service中，一个有aop作用的方法func1调用另一个有aop作用的方法func2，此时func2的aop方法会失效<br>解释：当调用func1时，因为此方法有aop作用，spring会生成一个增强代理类$service，于是通过$service来调用func1，而func2的调用是通过this.func2，也就是没走代理类$service，因此this就是原始sevice，并不是代理类$service，于是aop的效果就失效了。</p>
-</li>
-</ol>
-<p>解决方案:<br>a.将func1和func2放在两个不同的类中，然后需要依赖时，注入相关的依赖即可.<br>b.调用方法时，获取当前上下文的代理对象(通过AopContext.currentProxy())，然后通过代理对象进行方法调用,这种方案的前提是需要使用需要在AOP配置里暴露代理对象，在Spring Boot中可以通过注解@EnableAspectJAutoProxy(exposeProxy = true)进行配置。</p>
-<ol start="10">
-<li><p>spring boot<br>spring boot针对spring应用进行了变革，将各种繁琐的配置给简化，尽量的减少配置甚至无配置。<br>spring boot的自动配置特性，会探测pom.xml文件中的spirng-boot-starter-xxx.jar包，当加入相应的依赖时，就会自动配置出相应的bean出来使用，例如，加入spring-boot-starter-jdbc和com.h2database时，就会自动配置jdbcTemplate bean和 H2Database bean供使用.<br>@EnableAutoConfiguration启动自动配置.</p>
-</li>
-<li><p>spring boot项目内嵌tomcat和部署到独立的tomcat容器的启动类区别<br>a.当使用内嵌的tomcat时，不需要修改启动类，直接使用spring boot自动生成的启动类启动，此时包格式为jar包。<br>b.当使用独立的web容器运行项目时，例如jboss或者tomcat，则需要启动类继承SpringBootServletInitializer类，重写configure方法，保持main方法不动。<br>继承这个类的目的就是为了替代以往web.xml加载资源的方式。</p>
-</li>
-</ol>
-<ol start="12">
-<li>spring事务<br>概念：spring本身没有事务，所使用的事务本质还是数据库本身的事务.<br>声明式开启方式：<br>启动类加注解@EnableTransactionManagement<br>方法或者类加注解@Transactional，推荐方法上使用，便于细粒度控制，防止事务造成的意外情况.</li>
-</ol>
-<p>几个问题：<br>问题一：为啥要是用事务？<br>–为了保证一些数据库操作能同时成功和失败，因此需要放在一个数据库事务中来进行操作。</p>
-<p>问题二：Spring是如何保证事务的？<br>–所谓的保证事务，目的就是让一些连续多次数据库操作在一个事务里面，因此通过共用一个数据库连接connection即可完成。<br>因此一个事务使用一个独立的connection，每个事务使用不同的connection。</p>
-<p>问题三：spring中的service、dao等bean都是无状态的单例bean，单例的bean如何保证connection独立？<br>–操作数据库内部是通过一个线程来操作的，而connection是非线程安全的，同一时刻不能被多个线程共享，<br>因此每个线程需要持有独立的connection，并且互不相同、互不干扰。<br>所以我们使用事物同步管理器TransactionSynchronizationManager，实现事务的同步管理，利用ThreadLocal将数据库资源(connection)和当前事务绑定到一起，<br>使得事务传播时可以拿到正确的connection。TransactionSynchronizationManager 将 Dao、Service 类中影响线程安全的所有 “ 状态 ” 都统一抽取到该类中，<br>并用 ThreadLocal 进行封装，这样一来， Dao 和 Service就不用自己来保存一些事务状态了，从而就变成了线程安全的单例对象了。</p>
-<p>参考资料：<br><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1497685">https://cloud.tencent.com/developer/article/1497685</a><br><a target="_blank" rel="noopener" href="https://developer.aliyun.com/article/778661">https://developer.aliyun.com/article/778661</a></p>
-<ol start="13">
-<li>spring mvc 流程：</li>
-</ol>
-<ul>
-<li>http请求发送到前端控制器DispatcherServlet</li>
-<li>前端控制器请求处理器映射器HandlerMapping,返回对应的处理器适配器HandlerAdapter</li>
-<li>前端控制器请求适配器执行对应处理器Controller</li>
-<li>controller处理器处理完后，如果是前后端一体的(@Controller)则返回ModelAndView，如果是restful风格的(@RestController)前后端分离，则返回相应的json或其他格式的字符串即可。</li>
-<li>前端控制器再将返回的结果response给客户端.如果是ModelAndView对象，则还需要进行视图解析，如果是Restful风格接口，则直接返回结果。</li>
-</ul>
-<ol start="14">
-<li>spring 核心技术 IOC AOP</li>
-</ol>
-<ul>
-<li>IOC 控制反转，将new对象的工作交给spring 进行，spring启动时会扫描注解，根据依赖关系，自动的初始化bean，并放入对应的bean容器中，spring中好几种bean容器，因此启动时是多个容器同时进行初始化工作的；默认情况下，spring初始化出来的bean是单例的，也就是容器中只有一个bean对象，每个注入的地方都是复用同一个bean对象的。可以指定创建非单例的bean.</li>
-<li>AOP 动态代理，可以实现面向切面编程，给一个bean动态的实现相应的方法。cglib,jdk方式两种不同的动态代理.   </li>
-</ul>
-<ol start="15">
-<li>spring中的事务注解，多数据源切换都是基于AOP实现的</li>
-</ol>
-<ol start="16">
-<li>mycat </li>
-</ol>
-<ul>
-<li>mycat 分页查询时会改写sql，比如select * from test limit M,N,会把sql改写成select * from test limit 0,M+N,将改写后的sql分发到各个节点执行，然后再放到mycat内存里进行汇总处理。因此mycat不适合M很大的分页，必须在sql中添加有效的过滤条件尽量的减少筛选出来的数量。</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://dpengpeng.github.io/2021/07/13/java/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/header.jpg">
-      <meta itemprop="name" content="realDing">
-      <meta itemprop="description" content="自强不息 厚德载物">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ENOUGH">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/07/13/java/" class="post-title-link" itemprop="url">java</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-      
-
-      <time title="Created: 2021-07-13 23:40:47 / Modified: 23:45:58" itemprop="dateCreated datePublished" datetime="2021-07-13T23:40:47+08:00">2021-07-13</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="java-并发"><a href="#java-并发" class="headerlink" title="java 并发"></a>java 并发</h2><ol>
-<li>cpu,内存，磁盘 之间的效率问题衍生出并发问题：可见性 原子性 有序性</li>
-<li>解决并发: 就是解决上述衍生出来的三个问题<ul>
-<li>volatile: 解决可见性和有序性问题，可见性就涉及到java的内存模型：主内存和每个线程自己的工作内存。每个线程访问的变量都是从主内存拿取，然后放在线程自己的工作内存(比如cpu寄存器)中使用的，更新完变量值后，可以再写回主内存。被volatile修饰的变量，每次读都是从主内存读取最新，更新完后立即再写回主内存，并且修饰后变量的位置顺序不会被编译器给指令优化。</li>
-<li>锁：<ul>
-<li>可以解决原子性问题。根据锁对并发性能的影响，产生了各种锁，synchronized,reentrantlock(可以配合condition使用,配合多个条件变量使用，然后可以通过wait将不同的线程放到不同的条件队列中等待唤醒,即等待通知机制)，readwritelock(内部分为读锁和写锁,读读ok,读写阻塞，写写阻塞，应用于读多写少)</li>
-<li>synchronized锁可重入，不可中断，非公平锁</li>
-<li>Lock的实现类锁可重入，可中断，也可以设置公平锁或者非公平锁,默认非公平锁</li>
-</ul>
-</li>
-<li>无锁方式解决并发安全问题：<ul>
-<li>final 修饰变量</li>
-<li>使用ThreadLocal不共享变量</li>
-<li>原子类中使用CAS(compare and swap比较并交换，内部用到了自旋)
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/07/13/java/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
-    </div>
 
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://dpengpeng.github.io/2021/07/02/mysql%E7%9B%B8%E5%85%B3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/header.jpg">
-      <meta itemprop="name" content="realDing">
-      <meta itemprop="description" content="自强不息 厚德载物">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ENOUGH">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/07/02/mysql%E7%9B%B8%E5%85%B3/" class="post-title-link" itemprop="url">mysql相关</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-
-      <time title="Created: 2021-07-02 22:26:54" itemprop="dateCreated datePublished" datetime="2021-07-02T22:26:54+08:00">2021-07-02</time>
-    </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">Edited on</span>
-        <time title="Modified: 2021-07-13 23:32:17" itemprop="dateModified" datetime="2021-07-13T23:32:17+08:00">2021-07-13</time>
-      </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <ol>
-<li>select * for udpate</li>
-</ol>
-<ul>
-<li>for udpate应用的是悲观锁，根据select的数据集范围会对不同量级的数据进行加锁，<br>良好情况下，比如通过主键、索引定位到行，则进行行加锁，<br>较差情况下，可能进行表锁，使用时需要针对不同的sql进行分析，判定加锁的范围。<br>在高并发下，可能对性能有影响。</li>
-</ul>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/07/02/mysql%E7%9B%B8%E5%85%B3/#more" rel="contents">
-                Read more &raquo;
-              </a>
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/07/13/springboot/" rel="prev" title="springboot">
+                  <i class="fa fa-chevron-left"></i> springboot
+                </a>
             </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://dpengpeng.github.io/2021/07/01/kafka%E8%87%AA%E9%97%AE%E8%87%AA%E7%AD%94/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/header.jpg">
-      <meta itemprop="name" content="realDing">
-      <meta itemprop="description" content="自强不息 厚德载物">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ENOUGH">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/07/01/kafka%E8%87%AA%E9%97%AE%E8%87%AA%E7%AD%94/" class="post-title-link" itemprop="url">kafka自问自答</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-
-      <time title="Created: 2021-07-01 22:25:22" itemprop="dateCreated datePublished" datetime="2021-07-01T22:25:22+08:00">2021-07-01</time>
-    </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">Edited on</span>
-        <time title="Modified: 2021-07-02 00:31:22" itemprop="dateModified" datetime="2021-07-02T00:31:22+08:00">2021-07-02</time>
-      </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/kafka/" itemprop="url" rel="index"><span itemprop="name">kafka</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="kafka是什么"><a href="#kafka是什么" class="headerlink" title="kafka是什么"></a>kafka是什么</h2><p>kafka是一开始是个消息中间件引擎，后来有了kafka streams后便可以提供流计算功能(以jar形式添加到一个应用中即可使用)</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/07/01/kafka%E8%87%AA%E9%97%AE%E8%87%AA%E7%AD%94/#more" rel="contents">
-                Read more &raquo;
-              </a>
+            <div class="post-nav-item">
+                <a href="/2021/07/13/flink/" rel="next" title="flink">
+                  flink <i class="fa fa-chevron-right"></i>
+                </a>
             </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
+          </div>
     </footer>
   </article>
 </div>
 
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://dpengpeng.github.io/2021/06/26/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/header.jpg">
-      <meta itemprop="name" content="realDing">
-      <meta itemprop="description" content="自强不息 厚德载物">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ENOUGH">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/06/26/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-      
-
-      <time title="Created: 2021-06-26 18:00:33 / Modified: 19:21:34" itemprop="dateCreated datePublished" datetime="2021-06-26T18:00:33+08:00">2021-06-26</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/06/26/hello-world/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
 
 
 

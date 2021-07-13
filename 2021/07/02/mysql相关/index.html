@@ -28,7 +28,7 @@
 <meta property="og:description" content="select * for udpate   for udpate应用的是悲观锁，根据select的数据集范围会对不同量级的数据进行加锁，良好情况下，比如通过主键、索引定位到行，则进行行加锁，较差情况下，可能进行表锁，使用时需要针对不同的sql进行分析，判定加锁的范围。在高并发下，可能对性能有影响。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-07-02T14:26:54.000Z">
-<meta property="article:modified_time" content="2021-07-06T16:45:28.313Z">
+<meta property="article:modified_time" content="2021-07-13T15:32:17.497Z">
 <meta property="article:author" content="realDing">
 <meta name="twitter:card" content="summary">
 
@@ -162,7 +162,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -250,7 +250,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">Edited on</span>
-        <time title="Modified: 2021-07-07 00:45:28" itemprop="dateModified" datetime="2021-07-07T00:45:28+08:00">2021-07-07</time>
+        <time title="Modified: 2021-07-13 23:32:17" itemprop="dateModified" datetime="2021-07-13T23:32:17+08:00">2021-07-13</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -370,9 +370,13 @@
 <li>行级锁，锁一个或者多行数据</li>
 <li>读锁S，是共享锁</li>
 <li>写锁X，是排他锁</li>
+<li>间隙锁,只在可重复读隔离级别下才会有，当定位不到一个行时，会将行与行之间的间隙给加锁，导致落入这个间隙的数据也不能插入</li>
 </ul>
 <ol start="10">
 <li><p>数据库中的乐观锁</p>
+<ul>
+<li>就是指MVCC</li>
+</ul>
 </li>
 <li><p>数据库并发优化</p>
 </li>
@@ -442,6 +446,26 @@
 </li>
 <li><p>几种概念<br>flush 一般是说刷脏页，<br>purge一般是指清undo log,<br>merge一般是指应用change buffer</p>
 </li>
+<li><p>分页</p>
+</li>
+</ol>
+<ul>
+<li>对于存在limit 10000000,10类似这中的分页，比如有主键id表示，可以搜索下一页的时候带上上一页最大的id条件进行搜索如where id &gt; last_max_id limit 10;或者先把所有的id挑选出来，再根据id进行回表查其他字段数据,select * from t where id in (select id from t where xxx);</li>
+</ul>
+<ol start="24">
+<li>order by 执行流程</li>
+</ol>
+<ul>
+<li>先根据sql语句将数据捞到内存，然后根据sort buffer大小，如果小于设定值，则直接在内存里排序，如果大于，则在磁盘中使用临时文件进行局部排序，再根据归并排序进行全局合并，最后返回给客户端.</li>
+</ul>
+<ol start="25">
+<li>为啥对索引使用函数就会导致用不上索引了？</li>
+</ol>
+<ul>
+<li>真是原因是，当对索引使用函数后，就会破坏索引的有序性，因此优化器就会放弃走树搜索功能，导致会进行全索引扫描，可能会选择主键索引，也可能选择其他普通索引，失去了索引的快速定位功能,并不是说不会走索引了。</li>
+</ul>
+<ol start="26">
+<li>索引字段的类型隐式转换也会导致快速定位功能失效，进而全索引扫描</li>
 </ol>
 
     </div>
@@ -461,6 +485,9 @@
                 </a>
             </div>
             <div class="post-nav-item">
+                <a href="/2021/07/13/java/" rel="next" title="java">
+                  java <i class="fa fa-chevron-right"></i>
+                </a>
             </div>
           </div>
     </footer>
