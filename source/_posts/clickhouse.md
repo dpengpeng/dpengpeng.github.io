@@ -10,6 +10,7 @@ clickhouse是一种olap型数据库，采用列式存储，适合进行分析类
 ## 采用的集群架构
 vip --> chproxy集群 --> clickhouse集群(3*2)
 
+<!-- more -->
 ## vip
 vip的一种架构方式：keepalived+haproxy，分别部署到两台机器
 haproxy负责分发请求，keepalived负责维护haproxy节点的failover和vip的竞选。

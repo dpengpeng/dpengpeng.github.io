@@ -15,6 +15,7 @@ tags:
    * 精确一次
    * 至少一次
    * 做多一次
+<!-- more -->
 4. 几种状态后端
    * MemoryStateBackend
    * FsStateBackend

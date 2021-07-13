@@ -7,6 +7,7 @@ tags:
 1. spring中不同的bean之间的依赖，是通过spring来进行依赖注入的，bean之间交给spring来管理.
 spring可以在xml配置文件中，将bean的依赖关系给阐述出来，让spring读取xml来识别谁依赖谁。
 
+<!-- more -->
 2. spring配置方式
 a.基于xml的方式进行配置
 在xml中描述bean之间的依赖关系
