@@ -241,7 +241,7 @@
       <span class="post-meta-item-text">Posted on</span>
       
 
-      <time title="Created: 2021-07-13 23:46:50 / Modified: 23:47:58" itemprop="dateCreated datePublished" datetime="2021-07-13T23:46:50+08:00">2021-07-13</time>
+      <time title="Created: 2021-07-13 23:46:50 / Modified: 23:52:59" itemprop="dateCreated datePublished" datetime="2021-07-13T23:46:50+08:00">2021-07-13</time>
     </span>
 
   
@@ -270,82 +270,15 @@
 <ul>
 <li>精确一次</li>
 <li>至少一次</li>
-<li>做多一次</li>
-</ul>
-</li>
-<li><p>几种状态后端</p>
-<ul>
-<li>MemoryStateBackend</li>
-<li>FsStateBackend</li>
-<li>RocksDBStateBackend</li>
-</ul>
-</li>
-<li><p>flink的常用数据类型</p>
-<ul>
-<li>java的基础数据类型</li>
-<li>tuple</li>
-<li>pojo</li>
-<li>ArrayList,HashMap</li>
-</ul>
-</li>
-<li><p>flink中的时间类型</p>
-<ul>
-<li>event time</li>
-<li>processing time</li>
-<li>ingestion time</li>
-</ul>
-</li>
-<li><p>flink on yarn</p>
-<ul>
-<li>两种模式：<ul>
-<li>session模式: 所有任务共享一个flink 集群，任务与任务之间会有影响，不用</li>
-<li>pre-job模式: 每个任务一个独立的flinK集群,但是jar包的解析，生成JobGraph都是在客户端，当用户多时，客户端压力大</li>
-<li>application模式：每个任务一个独立的flinlk集群，</li>
-</ul>
-</li>
-<li>Flink On Yarn依赖Yarn资源调度和管理，动态申请资源启动Flink Cluster。每个被Yarn调度运行的Flink Cluster即为一个Application。Application包含了完成的Flink角色JobManager（ApplicationMaster/Container）、TaskManager（Container) </li>
-</ul>
-</li>
-</ol>
-<h1 id="flink笔记"><a href="#flink笔记" class="headerlink" title="flink笔记"></a>flink笔记</h1><h2 id="1-checkpoint-–-gt-snapshot"><a href="#1-checkpoint-–-gt-snapshot" class="headerlink" title="1.checkpoint –&gt;snapshot"></a>1.checkpoint –&gt;snapshot</h2><p>周期性的自动做状态快照，记录任务所有节点再某一时刻的处理状态，便于任务异常重启时从异常时间点进行状态恢复，仿佛没有发生任何异常。<br>执行checkpinting时，会在流中插入一个barrier，相当于一个屏障，用来区分某一个节点的前与后；</p>
-<h2 id="2-savepoint"><a href="#2-savepoint" class="headerlink" title="2.savepoint"></a>2.savepoint</h2><p>手动创建一个保存点，用于停止任务然后重启，从某一个指定的时间点进行重新运行</p>
-<h2 id="3-event-time-and-watermark"><a href="#3-event-time-and-watermark" class="headerlink" title="3.event-time and watermark"></a>3.event-time and watermark</h2><p>event-time 描述真实的事件发生时间<br>使用event-time就需要提供timestamp提取器和watermark生成器<br>watermark的作用:This is precisely what watermarks do — they define when to stop waiting for earlier events.<br>带时间戳的事件流在不确定是否有序的情况下进行传输，使用watermark来衡量何时停止等待早期事件，在时间窗口中经常使用。</p>
-<p>event-time处理依赖watermark生成器，根据timestamp生成一个watermark(特殊时间戳)，然后插入到事件流中。<br>假设一个watermark=t,则代表可以认为时间T&lt;=t的事件流都已经全部到达了。当后期一个T &lt; t 的事件流再次出现时，可以认为此事件流为迟到的事件。</p>
-<p>对于迟到的事件，默认是删除。也可以通过side-output方式输出到其他流中进行针对处理。</p>
-<h2 id="4-window-功能可以用keyedProcessFunction来间接实现"><a href="#4-window-功能可以用keyedProcessFunction来间接实现" class="headerlink" title="4.window 功能可以用keyedProcessFunction来间接实现"></a>4.window 功能可以用keyedProcessFunction来间接实现</h2><h2 id="5-exactly-once"><a href="#5-exactly-once" class="headerlink" title="5.exactly-once"></a>5.exactly-once</h2><p>任务异常时，消息的消费就会存在丢失或者重复。那么flink的消息处理会面临以下三种：</p>
-<ol>
-<li>Flink makes no effort to recover from failures (at most once)</li>
-<li>Nothing is lost, but you may experience duplicated results (at least once)</li>
-<li>Nothing is lost or duplicated (exactly once)</li>
-</ol>
-<p>at most once意味着没有开启checkpointing功能;<br>exactly-once的开启意味着barrier对齐功能开启；<br>at least once的开启意味着barrier对齐功能没有开启；</p>
-<p>barrier对齐指的是，一个operator假设接收两个以上的输入流，当发生一次checkpoint时，每个输入流都会插入一个barrier，并且这些barrier都会流到这个operator上，如果开始对齐功能，则这个operator上的checkpoint会等待所有的barrier收集齐了才能继续进行后续数据的传输，先到的barrier需要等待后到的barrier并且缓存自己数据线源源不断的流数据；如果不开启对齐功能，则每个数据流自己barrier处理完后，operator会继续处理它后面的新数据，不需要关注其他输入流是否完成了barrier,此时当发生故障重启时，某些先checkpoint的数据流的数据就会被重新消费，因为一次完整的state需要所有的operator都完成checkpoint；</p>
-<h2 id="6-Exactly-Once-End-to-end"><a href="#6-Exactly-Once-End-to-end" class="headerlink" title="6.Exactly Once End-to-end"></a>6.Exactly Once End-to-end</h2><p>端到端的一致性提供更好到的<br>To achieve exactly once end-to-end, so that every event from the sources affects the sinks exactly once, the following must be true:</p>
-<ol>
-<li>your sources must be replayable, and</li>
-<li>your sinks must be transactional (or idempotent)</li>
-</ol>
-<h2 id="7-keyed-stream-amp-keyed-state"><a href="#7-keyed-stream-amp-keyed-state" class="headerlink" title="7.keyed stream &amp; keyed state"></a>7.keyed stream &amp; keyed state</h2><p>通过keyBy处理后的流，假设下游需要保存一个keyed state，那个每个key都会有相应的逻辑分区，实际上每个key的数据都是独立的，并不会多个key的state保存在同一个state中，不会常规的都放在同一个map的结构，key/value中的state value会被严格的绑定到event’s key。</p>
-<h2 id="8-checkpoint-event-time-watermark-exactly-once关系"><a href="#8-checkpoint-event-time-watermark-exactly-once关系" class="headerlink" title="8.checkpoint,event time,watermark,exactly-once关系"></a>8.checkpoint,event time,watermark,exactly-once关系</h2><ol>
-<li>checkpoint是用来给数据流进行状态快照的，有没有开启checkpoint意味着任务重启时是否能保留之前的处理状态，这是一个单独的参数</li>
-<li>event-time与watermark必须绑定，这个是用来定义消息的实际时间和判断是否继续等待早期事件的依据时间点,这两个参数与checkpoint是否开启是无关的。</li>
-<li>exactly-once语句和checkpoint绑定的，依赖状态快照，但是与watermark是无关的；</li>
-</ol>
-<h2 id="9-table-api-and-sql-api"><a href="#9-table-api-and-sql-api" class="headerlink" title="9.table api and sql api"></a>9.table api and sql api</h2><p>flink的流批一体是通过table 和sql功能实现的，目前table planner推荐使用Blink planner;<br>flink sql的环境设置分三步：<br>EnvironmentSettings settings = EnvironmentSettings.newInstance().useBlinkPlanner().inStreamingMode().build();<br>StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();<br>StreamTableEnvironment tEnv = StreamTableEnvironment.create(env, settings);</p>
-<p>flink sql里面的execute()方法不用显示调用了。</p>
-<h2 id="10-flink-sql-控制并发度"><a href="#10-flink-sql-控制并发度" class="headerlink" title="10 flink sql 控制并发度"></a>10 flink sql 控制并发度</h2><h2 id="11-flink-keyby"><a href="#11-flink-keyby" class="headerlink" title="11.flink keyby"></a>11.flink keyby</h2><p>被keyby分流的后的数据会进入一个逻辑分区，可以理解为同样的一个key会被路由到同样的分区，但是一个分区可以接受不同的key划分过来的数据流，flink是通过散列的方式进行逻辑划分的，所以在keyby后面的计算单元中，需要注意一点，如果创建个容器进行装数据，那么如果是非state方式比如使用常规的hashmap进行存放数据，<br>那么这个hashmap实例数和并发数相等，同一个hashmap实例会被分配给hash(key)相同的不同key共享使用。而如果使用状态进行存储例如mapstate，那么因为state是根据key进行唯一绑定的，<br>所以不同的key就会有自己唯一对应的state进行存储数据。</p>
-<h2 id="12-flink-taskmanager-内存"><a href="#12-flink-taskmanager-内存" class="headerlink" title="12.flink taskmanager 内存"></a>12.flink taskmanager 内存</h2><ul>
-<li>从1.10后，flink对内存分配进行了升级。其中需要注意managed memory的使用；</li>
-<li>managed memory 分配在堆外非直接内存中，其作用是：Batch jobs用来排序、存放HashTable、中间结果的缓存；Streaming jobs的RocksDB State Backend Memory。因此在streaming jobs中并且没有使用rocksdb statebackend时，这个值应该调整的比较小，可以为0，苏宁调整为flink memory的0.04，flink默认为0.4。</li>
-</ul>
-<h2 id="13-flink-taskmanager-slot-cpu-memory"><a href="#13-flink-taskmanager-slot-cpu-memory" class="headerlink" title="13.flink taskmanager slot cpu memory"></a>13.flink taskmanager slot cpu memory</h2><ul>
-<li>flink任务都是运行在taskmanager中，jobmanager主要负责任务的调度等，taskmanager 的内存可以人为的自定义大小。</li>
-<li>taskmanager中的slot默认为1个，可以设置多个，taskmanager中的cpu个数默认和slot是1:1比例的，每个slot会的内存是根据taskmanager进行平均分配的，内存资源是隔离的，但是cpu不是。</li>
-<li>每个taskmanager只有一个jvm进行，slot相当于线程，多个slot是复用一个jvm的连接等资源。</li>
-<li>实际实践中，根据taskmanager的大小，可以自行决定采用一个slot还是多个slot的方式来部署计算单元。</li>
-<li>flink的可以根据需要执行jar包是人为的设置一些参数的大小，例如manager memory通过-yD taskmanager.memory.managed.fraction=0.04进行设置，slot数量通过-ys 2 进行设置。</li>
-</ul>
-<h2 id="14-flink-中每个slot与线程的关系"><a href="#14-flink-中每个slot与线程的关系" class="headerlink" title="14.flink 中每个slot与线程的关系"></a>14.flink 中每个slot与线程的关系</h2>
+<li>做多一次
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/07/13/flink/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -396,7 +329,7 @@
       <span class="post-meta-item-text">Posted on</span>
       
 
-      <time title="Created: 2021-07-13 23:46:10 / Modified: 23:46:32" itemprop="dateCreated datePublished" datetime="2021-07-13T23:46:10+08:00">2021-07-13</time>
+      <time title="Created: 2021-07-13 23:46:10 / Modified: 23:53:12" itemprop="dateCreated datePublished" datetime="2021-07-13T23:46:10+08:00">2021-07-13</time>
     </span>
 
   
@@ -411,209 +344,14 @@
     <div class="post-body" itemprop="articleBody">
           <h1 id="clickhouse集群搭建"><a href="#clickhouse集群搭建" class="headerlink" title="clickhouse集群搭建"></a>clickhouse集群搭建</h1><p>clickhouse是一种olap型数据库，采用列式存储，适合进行分析类业务，sql语句丰富且与mysql语句类似。</p>
 <h2 id="采用的集群架构"><a href="#采用的集群架构" class="headerlink" title="采用的集群架构"></a>采用的集群架构</h2><p>vip –&gt; chproxy集群 –&gt; clickhouse集群(3*2)</p>
-<h2 id="vip"><a href="#vip" class="headerlink" title="vip"></a>vip</h2><p>vip的一种架构方式：keepalived+haproxy，分别部署到两台机器<br>haproxy负责分发请求，keepalived负责维护haproxy节点的failover和vip的竞选。</p>
-<h2 id="chproxy集群"><a href="#chproxy集群" class="headerlink" title="chproxy集群"></a>chproxy集群</h2><ul>
-<li><a target="_blank" rel="noopener" href="https://github.com/Vertamedia/chproxy">官网地址</a></li>
-<li>chproxy集群每个节点单独部署，都是独立的节点，通过vip来负载均衡访问每个chproxy，任何一节点挂了以后不影响集群服务，只需要拉起来就行了。</li>
-<li>Chproxy集群模式,是ClickHouse数据库的http代理和负载均衡器，读写请求都可以通过chproxy配置策略来访问ClickHouse集群。</li>
-<li>write列表配置数据直接写入本地表,read列表配置数读取分布式表</li>
-</ul>
-<h2 id="clickhouse集群"><a href="#clickhouse集群" class="headerlink" title="clickhouse集群"></a>clickhouse集群</h2><h3 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h3><ul>
-<li><a target="_blank" rel="noopener" href="https://clickhouse.yandex/">官网地址</a></li>
-<li>搭建ch集群需要zookeeper</li>
-<li>ClickHouse集群模式，采用3*2模式，3个分片shard，每个shard 2个副本，两个副本互相同步数据，同时对外接收读写请求;</li>
-<li>zookeeper集群用来存储ClickHouse集群的节点信息和分布式表等信息，起到协调ClickHouse集群作用;</li>
-</ul>
-<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul>
-<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_37933018/article/details/111462868">https://blog.csdn.net/qq_37933018/article/details/111462868</a></li>
-<li><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/762f8b7d323d">https://www.jianshu.com/p/762f8b7d323d</a></li>
-<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/103781296">https://zhuanlan.zhihu.com/p/103781296</a></li>
-<li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1488512">https://cloud.tencent.com/developer/article/1488512</a></li>
-</ul>
-<p>1.clickhouse私用相关文章<br>运维派clickhouse在mysql上的应用<br><a target="_blank" rel="noopener" href="http://www.yunweipai.com/archives/28786.html">http://www.yunweipai.com/archives/28786.html</a><br><a target="_blank" rel="noopener" href="https://www.secrss.com/articles/3173">https://www.secrss.com/articles/3173</a></p>
-<p>2.解决clickhouse并发问题之CHproxy安装配置<br><a target="_blank" rel="noopener" href="https://wchch.github.io/2019/06/14/%E8%A7%A3%E5%86%B3clickhouse%E5%B9%B6%E5%8F%91%E9%97%AE%E9%A2%98%E4%B9%8BCHproxy%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AE/">https://wchch.github.io/2019/06/14/%E8%A7%A3%E5%86%B3clickhouse%E5%B9%B6%E5%8F%91%E9%97%AE%E9%A2%98%E4%B9%8BCHproxy%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AE/</a></p>
-<p>3.分布式表建立方式<br><a target="_blank" rel="noopener" href="https://www.altinity.com/blog/2017/6/5/clickhouse-data-distribution">https://www.altinity.com/blog/2017/6/5/clickhouse-data-distribution</a><br><a target="_blank" rel="noopener" href="https://www.altinity.com/blog/2018/5/10/circular-replication-cluster-topology-in-clickhouse">https://www.altinity.com/blog/2018/5/10/circular-replication-cluster-topology-in-clickhouse</a></p>
-<p>集群搭建参考<br><a target="_blank" rel="noopener" href="http://www.clickhouse.com.cn/topic/5a366e97828d76d75ab5d5a0">http://www.clickhouse.com.cn/topic/5a366e97828d76d75ab5d5a0</a><br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/freeweb/p/9352947.html">https://www.cnblogs.com/freeweb/p/9352947.html</a><br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/5f7809b1965e">https://www.jianshu.com/p/5f7809b1965e</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/hyesc/article/details/83022236">https://blog.csdn.net/hyesc/article/details/83022236</a><br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/ae45e0aa2b52">https://www.jianshu.com/p/ae45e0aa2b52</a><br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/20639fdfdc99">https://www.jianshu.com/p/20639fdfdc99</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/Alice_qixin/article/details/89209519">https://blog.csdn.net/Alice_qixin/article/details/89209519</a></p>
-<h3 id="访问ch"><a href="#访问ch" class="headerlink" title="访问ch"></a>访问ch</h3><ol>
-<li>官方JDBC方式直连clickhouse sever:<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">   &lt;groupId&gt;ru.yandex.clickhouse&lt;/groupId&gt;</span><br><span class="line">   &lt;artifactId&gt;clickhouse-jdbc&lt;/artifactId&gt;</span><br><span class="line">   &lt;version&gt;<span class="number">0.2</span>&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
-集群模式下可以采用负载均衡方式直连，配置后端服务检查，可以自动过滤故障节点，使用方式如下：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> BalancedClickhouseDataSource <span class="title">buildBalancedClickhouseDataSource</span><span class="params">()</span> </span>&#123;</span><br><span class="line">     ClickHouseProperties properties = <span class="keyword">new</span> ClickHouseProperties();</span><br><span class="line">     <span class="comment">//直连clickhouse server</span></span><br><span class="line">     properties.setUser(<span class="string">&quot;use&quot;</span>);</span><br><span class="line">     properties.setPassword(<span class="string">&quot;pass&quot;</span>);</span><br><span class="line">     BalancedClickhouseDataSource dataSource = <span class="keyword">new</span> BalancedClickhouseDataSource    (<span class="string">&quot;jdbc:clickhouse://ip1:8123,ip2:8123,ip3:8123/databasename&quot;</span>, properties);</span><br><span class="line">     <span class="comment">//连接检查机制必须打开,否则服务端任意一个宕机后整个集群不可用</span></span><br><span class="line">     dataSource.scheduleActualization(<span class="number">10</span>, TimeUnit.SECONDS);</span><br><span class="line">     <span class="keyword">return</span> dataSource;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-<li>通过http连接池方式，自定义http client客户端工具，连接chproxy集群，发送select 和 insert 请求.现有的方式是使用一个线程池，通过线程池来发送http任务。</li>
-</ol>
-<h3 id="集群安装"><a href="#集群安装" class="headerlink" title="集群安装"></a>集群安装</h3><ol>
-<li>官网yum源下载rpm包,官网有下载方式</li>
-<li>第三方打包好的安装包:<a target="_blank" rel="noopener" href="https://packagecloud.io/Altinity/clickhouse">https://packagecloud.io/Altinity/clickhouse</a></li>
-</ol>
-<p>使用集群安装工具<br>使用clustershell安装:clush -g all -b ‘rpm -ivh /home/dpp/clickhouse-server-19.11.9.52-1.el7.x86_64.rpm’</p>
-<p>安装时需要关闭swap<br>swap关闭命令:<br>1.查看swap空间和使用情况<br>swapon -s<br>free -m<br>2.关闭swap<br>swapoff /dev/dm-1<br>swapon -s<br>3.启用之前关闭分区<br>swapon /dev/dm-1<br>swapon -s</p>
-<p>包名及安装顺序如下：</p>
-<ul>
-<li>rpm -ivh clickhouse-server-common-19.11.9.52-1.el7.x86_64.rpm</li>
-<li>rpm -ivh clickhouse-common-static-19.11.9.52-1.el7.x86_64.rpm</li>
-<li>rpm -ivh clickhouse-server-19.11.9.52-1.el7.x86_64.rpm</li>
-<li>rpm -ivh clickhouse-debuginfo-19.11.9.52-1.el7.x86_64.rpm</li>
-<li>rpm -ivh clickhouse-client-19.11.9.52-1.el7.x86_64.rpm</li>
-</ul>
-<p>安装前需要下载依赖包：<br>libtool-ltdl-2.4.2-21.el7_2.x86_64.rpm<br>unixODBC-2.3.1-11.el7.x86_64.rpm<br>安装异常参考：<a target="_blank" rel="noopener" href="https://clickhouse.yandex/docs/en/operations/troubleshooting/">https://clickhouse.yandex/docs/en/operations/troubleshooting/</a></p>
-<ol start="3">
-<li>卸载及删除安装文件</li>
-</ol>
-<ul>
-<li>yum list installed | grep clickhouse</li>
-<li>yum remove -y clickhouse-common-static.xxx</li>
-<li>yum remove -y clickhouse-server-common.xxx</li>
-<li>rm -rf /var/lib/clickhouse</li>
-<li>rm -rf /etc/clickhouse-*</li>
-<li>rm -rf /var/log/clickhouse-server</li>
-</ul>
-<h3 id="ClickHouse-表引擎"><a href="#ClickHouse-表引擎" class="headerlink" title="ClickHouse 表引擎"></a>ClickHouse 表引擎</h3><ol>
-<li>ReplacingMergeTree:  </li>
-</ol>
-<ul>
-<li>此为MergeTree家族里具有复制功能的表引擎，需要配合zookeeper使用；采用此引擎的表，同一个shard里面的不同副本的本地表会根据zookeeper里面的表节点信息，互相增量同步彼此没有的分区数据。</li>
-<li>insert数据时，会随机挑选某个shard里面的某一个副本节点进行插入操作，其他副本后台进行同步数据，达到不同副本之间的数据一致性和可靠性。</li>
-<li>select数据通过distributed table 读取数据，http请求被分配到某一个分布式表的节点上，此节点再将sql分发到其他分片，并行执行sql语句，然后将数据汇聚到初始http请求节点，返回给用户。图片解析可以百度: clickhouse reading from distributed table</li>
-</ul>
-<h3 id="建表语句"><a href="#建表语句" class="headerlink" title="建表语句"></a>建表语句</h3><p>建表需要创建两种表:本地表和分布式表<br>本地表示例：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> IF <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> dbname.tablename <span class="keyword">ON</span> CLUSTER `cluster<span class="operator">-</span>name`</span><br><span class="line">(</span><br><span class="line">`db_id` Int32, </span><br><span class="line">`status_name` String, </span><br><span class="line">`status_value` String, </span><br><span class="line">`time_stamp` DateTime <span class="keyword">DEFAULT</span> now()</span><br><span class="line">)ENGINE <span class="operator">=</span> ReplicatedMergeTree(<span class="string">&#x27;/clickhouse/clustername/dbname/tablename/&#123;shard&#125;&#x27;</span>, <span class="string">&#x27;&#123;replica&#125;&#x27;</span>)</span><br><span class="line"><span class="keyword">PARTITION</span> <span class="keyword">BY</span> toYYYYMMDD(time_stamp)</span><br><span class="line"><span class="keyword">ORDER</span> <span class="keyword">BY</span> (db_id, time_stamp, status_name);</span><br></pre></td></tr></table></figure>
-<p>‘/clickhouse/clustername/dbname/tablename/{shard}’: The path to the table in ZooKeeper.<br>‘{replica}’：The replica name in ZooKeeper.<br>两个变量的值均从配置文件中自动读取替换。</p>
-<p>分布式表：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> dbname.tablename_all <span class="keyword">ON</span> CLUSTER `clustername` <span class="keyword">AS</span> dbname.tablename</span><br><span class="line">ENGINE <span class="operator">=</span> Distributed(<span class="string">&#x27;clustername&#x27;</span>, <span class="string">&#x27;dbname&#x27;</span>, <span class="string">&#x27;local_tablename&#x27;</span>, rand());</span><br></pre></td></tr></table></figure>
-<p>note: MergeTree家族引擎必须要有一个 Date 的列来作为索引。</p>
-<h3 id="常见问题"><a href="#常见问题" class="headerlink" title="常见问题"></a>常见问题</h3><ol>
-<li>表的建法</li>
-</ol>
-<ul>
-<li>本地表和分布式表都采用集群模式sql语句建立，不要在每台机器上一个一个建，防止元数据同步不一致</li>
-</ul>
-<ol start="2">
-<li>sql写法的小建议</li>
-</ol>
-<ul>
-<li>join时大表在左小表在右,JOIN操作时一定要把数据量小的表放在右边，ClickHouse中无论是Left Join 、Right Join还是Inner Join永远都是拿着右表中的每一条记录到左表中查找该记录是否存在，所以右表必须是小表。</li>
-<li>多表关联时，需在子查询里增加过滤条件，尽量提前缩小数据范围。</li>
-<li>如果不想加where条件，那么可以提前构建大宽表或者预计算</li>
-<li>clickhouse的in用法比join效率高；多个列可以组合成一个tuple类型使用，可以结合in使用</li>
-<li>筛选分区select … from xxx where partition_expr=xxx</li>
-</ul>
-<ol start="3">
-<li>副本的failover方式</li>
-</ol>
-<ul>
-<li>一个shard里面的不同副本是可以同时对外服务的，正常情况下每个副本可以根据配置，接收insert和select 类sql，如果某个副本不可用，chproxy会自动重发到其他可用副本。</li>
-</ul>
-<ol start="4">
-<li>clickhouse索引模式</li>
-</ol>
-<ul>
-<li>clickhouse采用稀疏索引，默认粒度8192，每隔固定长度会在索引相关文件里设置索引信息，涉及数据文件cloum_name.bin和标记文件cloum_name.mrk2，clickhouse中的数据是每个列一个文件，内部采用压缩模式存储。适合检索大数据量下的数据集，server会根据sql中的索引字段自动检索到适合的范围内数据块，然后会读取索引区间之间的所有数据。稀疏索引会引起额外的数据读取，当读取主键单个区间范围的数据时，每个数据块中最多会多读 index_granularity * 2 行额外的数据。大部分情况下，当 index_granularity = 8192 时，ClickHouse的性能并不会降级。</li>
-</ul>
-<ol start="5">
-<li>集群方式删除表分区</li>
-</ol>
-<ul>
-<li>ALTER TABLE table_name ON CLUSTER ‘cluster_name’ DROP PARTITION partition_expr<br>举例：alter table mon_database_status on cluster ‘cluster-1’ drop partition 20191104<br>其中，partition_expr表达式不可用单引号/双引号修饰，否则会报异常 : DB::Exception: There was an error on [snk207:9000]: Cannot execute replicated DDL query on leader.<br>这个方式可以只需要在某个server节点上执行一次就可以删除集群中所有的此表的词分区，不用每个分片一个一个执行。</li>
-</ul>
-<ol start="6">
-<li>clickhouse的复制表中的leader说明</li>
-</ol>
-<ul>
-<li>Leader replica just coordinates some background processes, leveraging ZooKeeper cluster. So unlike master/slave setup in other DBMS, in ClickHouse you shouldn’t care about replica leadership status for reads and writes.<br>More details are over here: <a target="_blank" rel="noopener" href="https://clickhouse.yandex/docs/en/operations/table_engines/replication/">https://clickhouse.yandex/docs/en/operations/table_engines/replication/</a></li>
-</ul>
-<ol start="7">
-<li><p>zookeeper对replicate table的影响<br>如果clickhouse服务启动正常，此时zookeeper不可用，那么clickhouse中的replicate table会变成read_only模式；<br>同时，在insert的过程中，如果zookeeper不可用，或者clickhouse与zookeeper交互有异常，都会抛出异常，执行失败；</p>
-</li>
-<li><p>修改不同分片的权重比例</p>
-</li>
-</ol>
-<ul>
-<li>场景1：通过chproxy来插入数据，则在配置文件中，为负载均衡的服务节点设定不同分片的比例，比如将&lt;204,205&gt;设置为1/3,&lt;206,207&gt;设置为2/3，如下所示，实测生效;<br>nodes:<br>[<br>“snk204:8123”,<br>“snk205:8123”,<br>“snk206:8123”,<br>“snk207:8123”,<br>“snk206:8123”,<br>“snk207:8123”<br>]</li>
-</ul>
-<p>目前测试，修改完配置文件后重启生效.<br>chproxy可以修改配置文件后动态加载，不用重启服务，方法为：ps -ef|grep -v grep |grep -v nohup|grep chproxy|awk ‘{print $2}’|xargs kill -HUP，此为想进程发送SIGHUP信号,让进程重新加载服务。</p>
-<ul>
-<li>场景2：clickhouse的配置文件中的分片权重<br>通过在<shard>标签里面的属性设置<weight>1</weight>，这种情况是通过分布式表插入数据时，分配的比重。</li>
-</ul>
-<ol start="9">
-<li><p>clickhoues的TTL功能bug<br>目前使用的版本为:ClickHouse version 19.11.9.52. 对此版本的表级别TTL进行试验测试，TTL无效，官方证实为bug，说是在11.14版本修复。</p>
-</li>
-<li><p>物化视图(materialized view)<br>物化视图的作用：</p>
-</li>
-<li><p>时序层面物化：从一个表衍生划分出不同的时间维度表的表</p>
-</li>
-<li><p>维度层面物化：针对不同的维度衍生出不同维度的不同engine表<br>物化视图的建法：</p>
-</li>
-<li><p>分片多副本模式下，用on cluster集群方式建立replicated*模式表，在每个节点上创建一个本地物化视图，再在集群上创建一个分布式表来查集群的物化视图;</p>
-</li>
-<li><p>其他模式下自选</p>
-</li>
-<li><p>truncate 删除表数据默认禁止超过50G的数据，需要按提示进行操作，创建一个force文件后，就可以删除了。</p>
-</li>
-<li><p>order by是对表中的数据进行排序存放,主键可以和排序排序键不一样,但是必须是排序键的前缀,也就是order by的前面几个字段</p>
-</li>
-</ol>
-<h3 id="集群扩容"><a href="#集群扩容" class="headerlink" title="集群扩容"></a>集群扩容</h3><ol>
-<li><p>新增分片<br>即给集群新增若干分片，比如从2个分片，增加到3个分片  </p>
-<blockquote>
-<p>处理步骤：</p>
-<blockquote>
-<p>1.准备好新增分片的机器<br>2.在新增机器上安装好clickhouse各个元件，修改一份最新全集群的配置文件，然后同步到集群所有节点，根据分片号，修改相应标签值。clickhouse的配置文件是动态生效的。此时，已经可以查询到新增分片了<br>3.启动新分片的机器，此时zookeeper中没有新分片信息，然后在新节点上创建一份与其他节点一致的库和表（此时的建库建表应该在每个节点使用本地模式执行，不能加 on cluster语句，{shard},{replicate}的占位符依旧可以使用），此时zookeeper已经存在新分片的表信息了，并且新节点可以查询分布式表中的数据和执行集群相关操作<br>4.此时的新分片还未对外服务，不能接受插入数据请求。因此在chproxy中添加节点信息，重启chproxy服务，新分片即可对外服务，同时给新增分片增加数据权重，达到数据均衡。等到数据大致平衡后再修改一次分片权重。<br>方案实测生效。</p>
-</blockquote>
-</blockquote>
-</li>
-<li><p>新增副本</p>
-<blockquote>
-<blockquote>
-<p>1.副本的Clickhouse安装同上<br>2.更改新的添加副本的配置文件，同步到所有节点<br>3.启动新的副本节点，创建库和表，此时新的副本就会自动同步数据了，并且未在chproxy中登记，暂时可以不对外服务<br>4.将新的副本增加到chproxy的均衡节点中，就可以正常使用了。<br>方案实测生效。<br>副本的减少操作类似</p>
-</blockquote>
-</blockquote>
-</li>
-</ol>
-<h3 id="集群维护"><a href="#集群维护" class="headerlink" title="集群维护"></a>集群维护</h3><ol>
-<li>chproxy集群中某台服务宕机，则直接拉起服务继续使用</li>
-<li>一个shard中的某个副本节点宕机，则</li>
-</ol>
-<ul>
-<li>重新拉起CK服务，如果启动正常，则会自动同步丢失的数据</li>
-<li>若副本节点所在机器损坏不可用，则直接更换部分机器，并更新节点中的配置文件，用新的副本替换原来的副本，新增副本的方法见《新增副本》,zookeeper中会自动删除下线副本节点。</li>
-</ul>
-<ol start="3">
-<li>扩容分片方法，见《新增分片》方法;剔除分片zookeeper是不会自动删除节点的。</li>
-</ol>
-<h3 id="数据搬迁"><a href="#数据搬迁" class="headerlink" title="数据搬迁"></a>数据搬迁</h3><p>当遇到数据需要从一个集群迁移到另一个集群时，有如下方法：</p>
-<ol>
-<li><p>方法一：<br>通过remote表函数来实现，这种方式主要是用来每次执行一个表的数据迁移,表的数据量不是太大，语句格式为：<br>insert into db.table select * from remote(‘addresses_expr’, db.table[, ‘user’[, ‘password’]]);<br>在需要导入数据的新集群执行。</p>
-</li>
-<li><p>方法二：<br>通过clickhouse-copier工具来迁移，这种方式可以处理任意大小的集群数据，可以通过配置文件来同时以此同步不同的表数据，需要与zookeeper结合使用；</p>
-</li>
-</ol>
-<p>命令为：<br>clickhouse-copier copier –config /etc/clickhouse-sever/zookeeper.xml –task-path /clickhouse/copytasks/task1 –task-file schema.xml  –base-dir /data/clickhouse-copier –task-upload-force true </p>
-<p>(官方–daemon方式运行不起作用，有待考究)<br>或者自己实现后台执行模式:<br>clickhouse-copier copier –config /etc/clickhouse-sever/zookeeper.xml –task-path /clickhouse/copytasks/task1 –task-file /etc/clickhouse-sever/schema.xml  –base-dir /data/clickhouse-copier –task-upload-force true &gt;/dev/null 2&gt;&amp;1 &amp;<br>其中：–config,–task-path,–base-dir涉及到的文件或者目录可以自定义位置</p>
-<p>参数含义：<br>Parameters:<br>daemon — Starts clickhouse-copier in daemon mode.<br>config — The path to the zookeeper.xml file with the parameters for the connection to ZooKeeper.<br>task-path — The path to the ZooKeeper node. This node is used for syncing clickhouse-copier processes and storing tasks. Tasks are stored in $task-path/description.<br>task-file — Optional path to file with task configuration for initial upload to ZooKeeper.<br>task-upload-force — Force upload task-file even if node already exists.<br>base-dir — The path to logs and auxiliary files. When it starts, clickhouse-copier creates clickhouse-copier_YYYYMMHHSS_<PID> subdirectories in $base-dir. If this parameter is omitted, the directories are created in the directory where clickhouse-copier was launched.</p>
-<p>命令会把task-file指定的文件上传到zookeeper节点路劲task-file下，无需人工上传任务文件.<br>实验测试使用步骤如下：<br>1.准备zookeeper.xml配置文件</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">yandex</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">logger</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">level</span>&gt;</span>trace<span class="tag">&lt;/<span class="name">level</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">size</span>&gt;</span>100M<span class="tag">&lt;/<span class="name">size</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">count</span>&gt;</span>3<span class="tag">&lt;/<span class="name">count</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">logger</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">zookeeper</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">node</span> <span class="attr">index</span>=<span class="string">&quot;1&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">host</span>&gt;</span>snk204<span class="tag">&lt;/<span class="name">host</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">port</span>&gt;</span>2181<span class="tag">&lt;/<span class="name">port</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">node</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">zookeeper</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">yandex</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p>2.准备任务描述文件schema.xml，里面把数据的流转方式填写完善<br>3..执行迁移数据命令<br>clickhouse-copier copier –config /etc/clickhouse-sever/zookeeper.xml –task-path /clickhouse/copytasks/task1 –task-file /etc/clickhouse-sever/schema.xml  –base-dir /data/clickhouse-copier –task-upload-force true &gt;/dev/null 2&gt;&amp;1 &amp;<br>或者<br>clickhouse-copier copier –config /etc/clickhouse-sever/zookeeper.xml –task-path /clickhouse/copytasks/task1 –task-file /etc/clickhouse-sever/schema.xml  –base-dir /data/clickhouse-copier –task-upload-force true<br>4.查看任务同步状态<br>在/data/clickhouse-copier目录下会创建一个当前任务的子目录，可以通过查看下面的日志来了解任务同步状态.<br>等待数据同步完成即可。<br>NOTE:<br>clickhouse-copier每个同步完的分区会写在zookeeper的节点中，当重复执行命令时，并不会对已经完成的分区数据重复执行。并且clickhouse-copier一旦读取完数据就会停止任务进程。<br>因此这种方式适合于同步那些分区数据不会再变化的数据。</p>
-<ol start="3">
-<li>方法三：<br>通过修改clickhouse的集群配置文件，给每个分片增加新副本但是新副本可以不对外服务的方式，将老副本的数据同步到新副本，待数据同步差不多时，剔除旧的副本和机器，再次修改集群配置文件，将上游任务重定向到新的集群中即可。</li>
-</ol>
-<h3 id="clickhosue-中一些常用命令"><a href="#clickhosue-中一些常用命令" class="headerlink" title="clickhosue 中一些常用命令"></a>clickhosue 中一些常用命令</h3><ol>
-<li>clickhouse-client -u default -h 127.0.0.1 -m</li>
-<li>clickhouse-client -u default -h 127.0.0.1 -m -q “xxx_sql”</li>
-<li>systemctl stop clickhouse-server.service</li>
-<li>systemctl restart clickhouse-server.service</li>
-<li>systemctl status clickhouse-server.service</li>
-<li>sudo service clickhouse-server status</li>
-<li>alter table db.table drop partition 20210408</li>
-</ol>
-<h3 id="额外补充"><a href="#额外补充" class="headerlink" title="额外补充"></a>额外补充</h3><ol>
-<li>mysql语法中的执行顺序:<br>SELECT语句的完整语法为：<br>(7) SELECT<br>(8) DISTINCT <select_list><br>(1) FROM <left_table><br>(3) <join_type> JOIN <right_table><br>(2) ON <join_condition><br>(4) WHERE <where_condition><br>(5) GROUP BY <group_by_list><br>(6) HAVING <having_condition><br>(9) ORDER BY <order_by_condition><br>(10) LIMIT <limit_number></li>
-</ol>
-<p>案例:<br> SELECT a.customer_id, COUNT(b.order_id) as total_orders<br> FROM table1 AS a<br> LEFT JOIN table2 AS b<br> ON a.customer_id = b.customer_id<br> WHERE a.city = ‘hangzhou’<br> GROUP BY a.customer_id<br> HAVING count(b.order_id) &lt; 2<br> ORDER BY total_orders DESC;</p>
-<ol start="2">
-<li><p>group by语句的写法需要注意最后结果的唯一性,不能使select里面的字段产生某个列有多个值,并且select里面的字段要么在group by里面,要么用聚合函数来计算<br>clickhouse中的语法:<br>!!!clickhouse语法中写明order by顺序在select之前,和mysql中的顺序不一样.<br>如果存在GROUP BY子句，则在该子句中必须包含一个表达式列表。其中每个表达式将会被称之为“key”.<br>SELECT，HAVING，ORDER BY子句中的表达式列表必须来自于这些“key”或聚合函数。<br>简而言之，被选择的列中不能包含非聚合函数或key之外的其他列。<br>与MySQL不同的是（实际上这是符合SQL标准的），你不能够获得一个不在key中的非聚合函数列（除了常量表达式）。<br>但是你可以使用‘any’（返回遇到的第一个值）、max、min等聚合函数使它工作。</p>
-</li>
-<li><p>当通过proxy写ck时,proxy到CK服务端大量的tcp_tw来源于分片中副本之间的复制造成<br>当前端写proxy的过程中,如果http端为短连接,那么就会在proxy端产生大量的tcp_tw,如果为长链接,那么在proxy端会复用tcp连接.<br>但是http端的请求不会影响CK服务端,只有chproxy端才会影响CK.</p>
-</li>
-</ol>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/07/13/clickhouse/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -664,7 +402,7 @@
       <span class="post-meta-item-text">Posted on</span>
       
 
-      <time title="Created: 2021-07-13 23:42:53 / Modified: 23:45:47" itemprop="dateCreated datePublished" datetime="2021-07-13T23:42:53+08:00">2021-07-13</time>
+      <time title="Created: 2021-07-13 23:42:53 / Modified: 23:53:25" itemprop="dateCreated datePublished" datetime="2021-07-13T23:42:53+08:00">2021-07-13</time>
     </span>
 
   
@@ -678,92 +416,16 @@
     
     <div class="post-body" itemprop="articleBody">
           <ol>
-<li><p>spring中不同的bean之间的依赖，是通过spring来进行依赖注入的，bean之间交给spring来管理.<br>spring可以在xml配置文件中，将bean的依赖关系给阐述出来，让spring读取xml来识别谁依赖谁。</p>
-</li>
-<li><p>spring配置方式<br>a.基于xml的方式进行配置<br>在xml中描述bean之间的依赖关系</p>
-<bean id="xxx" class="yyy">
-<constructor-arg ref="zzz>
-</bean>
-b.基于java的配置
-@Configuration
-public class BbConfig {
- @Bean
- public Bb bb() {
-     //依赖注入了aa这个bean
-     // return new Bb(new Aa()); 这里bb中的Aa就变成了自己创建的对象了，而不是spring创建的
-     return new Bb(aa());//这里aa()方法产生的就是spring给注入的bean
- }
- @Bean
- public Aa aa() {
-     return new Aa();
- }
-}</li>
-<li><p>工作方式<br>spring通过应用上下文（Application Context）装载bean的定义并把它们组装起来。Spring应用上<br>下文全权负责对象的创建和组装。Spring自带了多种应用上下文的实现，它们之间主要的区别<br>仅仅在于如何加载配置。</p>
-</li>
-<li><p>aop<br>面向切面编程就是说，整个系统可以划分成各种不同功能的模块，每个模块负责自己的核心功能，<br>然后有些模块可以在不影响目标模块功能的前提下，作用到目标模块上，目标模块甚至都不知道自己被附加了这个模块，<br>这是一种无入侵式的功能绑定。<br>aop相对于调用一个抽象独立出来的方法而言，好处是对目标模块无注入影响，而公用方法，是需要嵌入到某个模块代码里面被调用的，<br>修改方法可能会影响目标模块。<br>aop的应用比如日志模块，事务模块，安全模块，可以用声明的方式作用到所要影响的组件上去。<br>aop的类是一个POJO类，是切面的同时前提也是一个spring bean，spring也可以像使用其他bean那样使用切面，比如依赖注入。</p>
-</li>
+<li>spring中不同的bean之间的依赖，是通过spring来进行依赖注入的，bean之间交给spring来管理.<br>spring可以在xml配置文件中，将bean的依赖关系给阐述出来，让spring读取xml来识别谁依赖谁。</li>
 </ol>
-<p>AOP原理<br>如何把切面织入到核心逻辑中？这正是AOP需要解决的问题。换句话说，如何对调用方法进行拦截，并在拦截前后进行安全检查、日志、事务等处理，就相当于完成了所有业务功能。</p>
-<p>在Java平台上，对于AOP的织入，有3种方式：</p>
-<p>编译期：在编译时，由编译器把切面调用编译进字节码，这种方式需要定义新的关键字并扩展编译器，AspectJ就扩展了Java编译器，使用关键字aspect来实现织入；<br>类加载器：在目标类被装载到JVM时，通过一个特殊的类加载器，对目标类的字节码重新“增强”；<br>运行期：目标对象和切面都是普通Java类，通过JVM的动态代理功能或者第三方库实现运行期动态织入。</p>
-<p>最简单的方式是第三种，Spring的AOP实现就是基于JVM的动态代理。由于JVM的动态代理要求必须实现接口，如果一个普通类没有业务接口，就需要通过CGLIB或者Javassist这些第三方库实现。<br>AOP技术看上去比较神秘，但实际上，它本质就是一个动态代理，让我们把一些常用功能如权限检查、日志、事务等，从每个业务方法中剥离出来。<br>需要特别指出的是，AOP对于解决特定问题，例如事务管理非常有用，这是因为分散在各处的事务代码几乎是完全相同的，并且它们需要的参数（JDBC的Connection）也是固定的。另一些特定问题，如日志，就不那么容易实现，因为日志虽然简单，但打印日志的时候，经常需要捕获局部变量，如果使用AOP实现日志，我们只能输出固定格式的日志，因此，使用AOP时，必须适合特定的场景。<br>spring调用动态代理的对象，其实已经不是原来自己的对象了，而是被spring包装过的对象，和单纯调用原始的对象不一样</p>
-<p>spring 通过CGLIB来创建一个被aop作用的类的代理类，核心就是先初始化一个原始的类对象，然后通过继承这个类创建一个代理类，<br>等实际运行时，表面上代码层是调用原始类对象的方法，实际上，真实运行调用的是被代理类的同名方法.</p>
-<ol start="5">
-<li><p>spring使用模板来消除重复样式的代码<br>比如使用JdbcTemplate，来避免各种重复的jdbc操作，包括创建连接，捕获sqlexception，关闭连接等</p>
-</li>
-<li><p>spring容器大致可以分为两类：<br>a.基本bean 工厂的容器,最基础<br>b.基于应用上下文的容器，基于bean工厂，分了各种xxxApplicationContext 上下文，每种上下文负责初始化各自范围内的bean<br>spring容器负责bean的整个生命周期，从出生到死亡。</p>
-</li>
-</ol>
-<ol start="7">
-<li>spring对bean的操作有：自动扫描，自动装配，条件装配，占位符，spirng计算表达式，基于javaConfig，基于xml配置.</li>
-</ol>
-<ol start="8">
-<li><p>@Autowired作用在普通方法上，会在注入的时候调用一次该方法，如果方法中有实体参数，会对方法里面的参数进行装配，并调用一次该方法。<br>这个可以用来在自动注入的时候做一些初始化操作。</p>
-</li>
-<li><p>aop失效场景(原始类servcie，aop代理后的类$service，代理类相当于是包裹在service外的子类，通过同名方法，内部实际再调用原始对象的方法):<br>a.在同一个类service中，一个无aop作用的普通方法func1里调用另一个有aop作用的方法func2，此时func2的aop方法会失效<br>解释：当调用func1时，因为此方法非并没有aop作用，因此用的就是原始service对象，内部方法也是通过this.func2调用的，因此整个过程用的都是原始对象sevice<br>b.在同一个类service中，一个有aop作用的方法func1调用另一个有aop作用的方法func2，此时func2的aop方法会失效<br>解释：当调用func1时，因为此方法有aop作用，spring会生成一个增强代理类$service，于是通过$service来调用func1，而func2的调用是通过this.func2，也就是没走代理类$service，因此this就是原始sevice，并不是代理类$service，于是aop的效果就失效了。</p>
-</li>
-</ol>
-<p>解决方案:<br>a.将func1和func2放在两个不同的类中，然后需要依赖时，注入相关的依赖即可.<br>b.调用方法时，获取当前上下文的代理对象(通过AopContext.currentProxy())，然后通过代理对象进行方法调用,这种方案的前提是需要使用需要在AOP配置里暴露代理对象，在Spring Boot中可以通过注解@EnableAspectJAutoProxy(exposeProxy = true)进行配置。</p>
-<ol start="10">
-<li><p>spring boot<br>spring boot针对spring应用进行了变革，将各种繁琐的配置给简化，尽量的减少配置甚至无配置。<br>spring boot的自动配置特性，会探测pom.xml文件中的spirng-boot-starter-xxx.jar包，当加入相应的依赖时，就会自动配置出相应的bean出来使用，例如，加入spring-boot-starter-jdbc和com.h2database时，就会自动配置jdbcTemplate bean和 H2Database bean供使用.<br>@EnableAutoConfiguration启动自动配置.</p>
-</li>
-<li><p>spring boot项目内嵌tomcat和部署到独立的tomcat容器的启动类区别<br>a.当使用内嵌的tomcat时，不需要修改启动类，直接使用spring boot自动生成的启动类启动，此时包格式为jar包。<br>b.当使用独立的web容器运行项目时，例如jboss或者tomcat，则需要启动类继承SpringBootServletInitializer类，重写configure方法，保持main方法不动。<br>继承这个类的目的就是为了替代以往web.xml加载资源的方式。</p>
-</li>
-</ol>
-<ol start="12">
-<li>spring事务<br>概念：spring本身没有事务，所使用的事务本质还是数据库本身的事务.<br>声明式开启方式：<br>启动类加注解@EnableTransactionManagement<br>方法或者类加注解@Transactional，推荐方法上使用，便于细粒度控制，防止事务造成的意外情况.</li>
-</ol>
-<p>几个问题：<br>问题一：为啥要是用事务？<br>–为了保证一些数据库操作能同时成功和失败，因此需要放在一个数据库事务中来进行操作。</p>
-<p>问题二：Spring是如何保证事务的？<br>–所谓的保证事务，目的就是让一些连续多次数据库操作在一个事务里面，因此通过共用一个数据库连接connection即可完成。<br>因此一个事务使用一个独立的connection，每个事务使用不同的connection。</p>
-<p>问题三：spring中的service、dao等bean都是无状态的单例bean，单例的bean如何保证connection独立？<br>–操作数据库内部是通过一个线程来操作的，而connection是非线程安全的，同一时刻不能被多个线程共享，<br>因此每个线程需要持有独立的connection，并且互不相同、互不干扰。<br>所以我们使用事物同步管理器TransactionSynchronizationManager，实现事务的同步管理，利用ThreadLocal将数据库资源(connection)和当前事务绑定到一起，<br>使得事务传播时可以拿到正确的connection。TransactionSynchronizationManager 将 Dao、Service 类中影响线程安全的所有 “ 状态 ” 都统一抽取到该类中，<br>并用 ThreadLocal 进行封装，这样一来， Dao 和 Service就不用自己来保存一些事务状态了，从而就变成了线程安全的单例对象了。</p>
-<p>参考资料：<br><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1497685">https://cloud.tencent.com/developer/article/1497685</a><br><a target="_blank" rel="noopener" href="https://developer.aliyun.com/article/778661">https://developer.aliyun.com/article/778661</a></p>
-<ol start="13">
-<li>spring mvc 流程：</li>
-</ol>
-<ul>
-<li>http请求发送到前端控制器DispatcherServlet</li>
-<li>前端控制器请求处理器映射器HandlerMapping,返回对应的处理器适配器HandlerAdapter</li>
-<li>前端控制器请求适配器执行对应处理器Controller</li>
-<li>controller处理器处理完后，如果是前后端一体的(@Controller)则返回ModelAndView，如果是restful风格的(@RestController)前后端分离，则返回相应的json或其他格式的字符串即可。</li>
-<li>前端控制器再将返回的结果response给客户端.如果是ModelAndView对象，则还需要进行视图解析，如果是Restful风格接口，则直接返回结果。</li>
-</ul>
-<ol start="14">
-<li>spring 核心技术 IOC AOP</li>
-</ol>
-<ul>
-<li>IOC 控制反转，将new对象的工作交给spring 进行，spring启动时会扫描注解，根据依赖关系，自动的初始化bean，并放入对应的bean容器中，spring中好几种bean容器，因此启动时是多个容器同时进行初始化工作的；默认情况下，spring初始化出来的bean是单例的，也就是容器中只有一个bean对象，每个注入的地方都是复用同一个bean对象的。可以指定创建非单例的bean.</li>
-<li>AOP 动态代理，可以实现面向切面编程，给一个bean动态的实现相应的方法。cglib,jdk方式两种不同的动态代理.   </li>
-</ul>
-<ol start="15">
-<li>spring中的事务注解，多数据源切换都是基于AOP实现的</li>
-</ol>
-<ol start="16">
-<li>mycat </li>
-</ol>
-<ul>
-<li>mycat 分页查询时会改写sql，比如select * from test limit M,N,会把sql改写成select * from test limit 0,M+N,将改写后的sql分发到各个节点执行，然后再放到mycat内存里进行汇总处理。因此mycat不适合M很大的分页，必须在sql中添加有效的过滤条件尽量的减少筛选出来的数量。</li>
-</ul>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/07/13/springboot/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 

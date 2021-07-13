@@ -19,7 +19,7 @@
 <ul>
 <li>精确一次</li>
 <li>至少一次</li>
-<li>做多一次</li>
+<li>做多一次<span id="more"></span></li>
 </ul>
 </li>
 <li><p>几种状态后端</p>
@@ -331,8 +331,10 @@
     <title>springboot</title>
     <url>/2021/07/13/springboot/</url>
     <content><![CDATA[<ol>
-<li><p>spring中不同的bean之间的依赖，是通过spring来进行依赖注入的，bean之间交给spring来管理.<br>spring可以在xml配置文件中，将bean的依赖关系给阐述出来，让spring读取xml来识别谁依赖谁。</p>
-</li>
+<li>spring中不同的bean之间的依赖，是通过spring来进行依赖注入的，bean之间交给spring来管理.<br>spring可以在xml配置文件中，将bean的依赖关系给阐述出来，让spring读取xml来识别谁依赖谁。</li>
+</ol>
+<span id="more"></span>
+<ol start="2">
 <li><p>spring配置方式<br>a.基于xml的方式进行配置<br>在xml中描述bean之间的依赖关系</p>
 <bean id="xxx" class="yyy">
 <constructor-arg ref="zzz>
@@ -423,6 +425,7 @@ public class BbConfig {
     <url>/2021/07/13/clickhouse/</url>
     <content><![CDATA[<h1 id="clickhouse集群搭建"><a href="#clickhouse集群搭建" class="headerlink" title="clickhouse集群搭建"></a>clickhouse集群搭建</h1><p>clickhouse是一种olap型数据库，采用列式存储，适合进行分析类业务，sql语句丰富且与mysql语句类似。</p>
 <h2 id="采用的集群架构"><a href="#采用的集群架构" class="headerlink" title="采用的集群架构"></a>采用的集群架构</h2><p>vip –&gt; chproxy集群 –&gt; clickhouse集群(3*2)</p>
+<span id="more"></span>
 <h2 id="vip"><a href="#vip" class="headerlink" title="vip"></a>vip</h2><p>vip的一种架构方式：keepalived+haproxy，分别部署到两台机器<br>haproxy负责分发请求，keepalived负责维护haproxy节点的failover和vip的竞选。</p>
 <h2 id="chproxy集群"><a href="#chproxy集群" class="headerlink" title="chproxy集群"></a>chproxy集群</h2><ul>
 <li><a href="https://github.com/Vertamedia/chproxy">官网地址</a></li>
